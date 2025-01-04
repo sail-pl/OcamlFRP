@@ -1,0 +1,2 @@
+(lang dune 3.17)
+(env (dev (flags :standard -warn-error -32-33-34-37)))

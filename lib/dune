@@ -1,0 +1,3 @@
+(library
+ (name ocamlfrp)
+ (public_name ocamlfrp.streams))

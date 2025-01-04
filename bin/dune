@@ -1,0 +1,4 @@
+(executable
+ (public_name ocamlfrp)
+ (name main)
+ (libraries ocamlfrp fmt))
