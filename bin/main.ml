@@ -1,7 +1,7 @@
 open Format
-open Fmt 
 open Ocamlfrp.Util
 open Ocamlfrp.Coiterator
+open Ocamlfrp.Yampa
 
 (* let _ = show pp_print_int (to_list nat 10) *)
 (* let _ = show pp_print_int (to_list (pre 0 nat) 10)
@@ -14,20 +14,17 @@ type ('a,'b,'c) sf = ('a, 'c) co -> ('b, 'c) co
 
 let ints : (int, int) co = Co ((fun (n:int) -> (n, n + 1)), 0) 
 
-let floats : (float, float) co = Co ((fun (f:float) -> (f, f +. 1.)), 0.)
+let _floats : (float, float) co = Co ((fun (f:float) -> (f, f +. 1.)), 0.)
 
 (* we can't zip two streams as they are not first class values *)
 (* we need the first operator to work on a part of the stream value *)
 
-let ints_and_floats : (float * int, int) co =
-  Co ((fun s -> ((float_of_int s, s), s + 1)), 0)
-
 let inverse : (float * int, int * int, 'c) sf =
   first (arr int_of_float)
 
-let sum = inverse >>> (arr ( fun (x,y) -> x + y))
+let _sum = inverse >>> (arr ( fun (x,y) -> x + y))
 
-let squares = 
+let _squares = 
   (arr (fun n -> (n,n)) >>> (arr (fun (n,m) -> n * m))) ints
 
 (* composition pour l'addition *)
@@ -39,13 +36,18 @@ let _ = show (pp_print_int) (to_list (sum ints_and_floats) 10)
 let _ = show (pair pp_print_int pp_print_int) (to_list (first (map ((+) 1)) (fork ints)) 10) *)
 
 let counter_inner : (unit * int, 'a) co -> (int * int, 'a) co = 
-  arr (fun ((), n) -> (n,n+1))
+  arr (fun ((), n) -> (n, n+1))
 
-let extints : (unit, int * 'a) co = Co ((fun ((n,s) : int * 'a) -> ((), (n + 1, s))), (0,())) 
+(* this is a simple register that maintains its value ?*)
+let units_with_zero : (unit, int * unit) co = Co (
+  (fun (n,()) -> ((),(n,()))), (0,()))
 
-let counter = loop counter_inner extints
+let counter = loop counter_inner 0 units_with_zero
 
 let _ = show (pp_print_int) (to_list counter 10)
+
+(* fait un plus 1 sur le résultat *)
+
 
 (* We compare different kind of streams and functions over streams *)
 (* The most general case are mathematical functions *)

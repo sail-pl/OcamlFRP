@@ -1,0 +1,47 @@
+(* arrows *) 
+(* acts as the identity on the state *)
+
+(* important : all operators produces boxes whose output state has the same kind as the input state*)
+(* As expected, only the loop function changes the structure of the state 
+  by adding the new 'memory to it' *)
+(* operators open box to rearrange the plugins *)
+
+
+
+(*  A PROUVER : les fonctions Yampa génére des sf qui ne modifient pas l'état !!! *)
+(* leur implantation *)
+(* The state is always the one of the global input *)
+
+(* let first (f : ('a, 's1) co -> ('b, 's2) co) : ('a * 'c, 's1) co -> ('b * 'c, 's1 * 's2) co = 
+  fun (Co (h, s))  ->  
+    let (Co (h', s')) = f (Co ((fun s1 -> let (x,y) = h s1 in (fst x, y)), s)) in
+      Co ((fun ((s1, s2)) -> 
+        let (x, y) = h' s2 and (z,t) = h s1 in 
+          ((x, snd z), (t,y))), (s,s'))   *)
+        
+(* composition *)
+
+(* let compose (g : ('b,'s3) co -> ('c,'s4) co) (f : ('a, 's1) co -> ('b, 's2) co) : 
+  ('a, ('s1 * 's3)) co -> ('c, ('s2 * 's4)) co =
+        fun (Co (t, (s1,s3))) ->
+          let (x, (y,z)) = t (s1,s3) in
+          let (Co (h, i) : ('b, 's2) co) = f (Co ((fun s1 -> let (x,(y, _)) = t  (s1, s3) in (x,y)), s1)) in 
+          let (Co (h', i') : ('c, 's3) co) = g (Co ((fun s3 -> let (x,(_,y)) = t (s1, s3) in (x,y)), s3)) in *)
+          (* Co (f, ) *)
+(* loop *)
+
+(* possibilité de combiner une fois qu'on est sur les streams 
+  mais pas sur les costreams ??? *)
+(* let fst (f : ('a,'s1) co -> ('b, 's2) co) : ('a*'c,'s1) co -> ('a*'c,'s2) co = 
+  fun (Co (g,s)) ->
+    Co (fun s -> ) *)
+  (* Co ((fun (a,s) -> ((a,?),s)), s) *)
+
+(** For testing purpose*)
+
+  
+
+  (* let rec apply_to_list (f : ('a,'b) t -> ('a,'c) t) (l : 'a list ) : 'a list =
+  match l with 
+    | [] -> []
+    | a::t -> let (b,s') = f s in b::(apply_to_list (Co (f, s')) t) *)
