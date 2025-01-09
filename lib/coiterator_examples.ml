@@ -61,8 +61,6 @@ let even (Co (f, s) : ('a,'s) co) : ('a, 's) co =
 let zip (Co (f, s1) : ('a,'b) co) (Co (g,s2) : ('c,'d) co) : ('a *'c, 'b * 'd) co =
   Co ((fun (s1,s2) -> let (b,s1') = f s1 in let (d,s2') = g s2 in ((b,d), (s1',s2'))), (s1,s2))
 
-
-
 let compose 
   (f : ('a,'s1) co -> ('b, 's3) co)
   (g : ('b, 's3) co -> ('c, 's4) co) : ('a,'s1) co -> ('c,'s4) co =

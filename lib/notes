@@ -1,10 +1,4 @@
-(* arrows *) 
-(* acts as the identity on the state *)
 
-(* important : all operators produces boxes whose output state has the same kind as the input state*)
-(* As expected, only the loop function changes the structure of the state 
-  by adding the new 'memory to it' *)
-(* operators open box to rearrange the plugins *)
 
 
 
