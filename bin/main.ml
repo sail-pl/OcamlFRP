@@ -1,7 +1,9 @@
 open Format
+open Fmt
 open Ocamlfrp.Util
 open Ocamlfrp.Coiterator
 open Ocamlfrp.Yampa
+open Ocamlfrp.References
 
 (* STREAMS *)
 
@@ -15,47 +17,33 @@ let positives : (int, int) co = Co ((mapright ((+) 1) << dup), 0)
 
 (* STREAM FUNCTIONS WITHOUT LOOPS *)
 
+let plus_left = arr dup >>> first (arr (( + ) 1))
+
 let squares = arr dup >>> (arr (uncurry ( * )))
 
 (* STREAM FUNCTIONS WITH LOOPS *)
 
-let counter = loop (arr (mapright ((+) 1) << dup << snd)) 0
+let counter = loop (arr (mapright (( + ) 1) << dup << snd)) 0
   
 let pre = loop (arr swap)
 
-let sum = loop (arr (dup << uncurry (+))) 0
+let sum = loop (arr (dup << uncurry ( + ))) 0
   
-(* References *)
+(* STREAM FUNCTIONS WITH REFERENCES *)
 
-type 'a cell = {content : 'a ref}
-
-let mkref x = {content = ref x}
-
-let get : 'r cell -> ('a, 'x) co -> ('r * 'a, 'x) co =
-  fun r (Co (h,x)) -> 
-    Co ((fun x -> let (a,x') = h x in ((!(r.content), a), x')) , x)
-
-let set : 'r cell -> ('r * 'a, 'x) co -> ('a, 'x) co = 
-  fun r (Co (h, x)) -> 
-    Co ((fun x -> let ((v,a), x') = h x in r.content := v; (a,x')), x)
-
-(* loop sf v = let r = mkref v in get r >>> f >>> set r, up to a swapping *)
-(* but get r and set r may go deeper if not needed at all places *)
-(* maybe we need to reverse input and register value in get and set *)
-
-let counter_with_ref = 
+let counter_with_ref : (unit, unit) co -> (int, unit * ((unit * unit) * unit)) co = 
   let r = mkref 0 in 
-    get r >>> arr ((mapleft ((+) 1)) << dup << fst) >>> set r
+    get r >>> arr ((mapleft (( + ) 1)) << dup << snd) >>> set r
     
 let pref_with_ref v = 
-  let r = mkref v in 
-    get r >>> arr swap >>> set r
+  let r = mkref v in get r >>> set r
 
 let sum_with_ref =
   let r = mkref 0 in 
     get r >>> arr (dup << uncurry (+)) >>> set r
 
 let _ = show (pp_print_int) (Some "positives:") (to_list positives 10)
+let _ = show (pair pp_print_int pp_print_int) (Some "plust_left:") (to_list (plus_left positives) 10)
 let _ = show (pp_print_int) (Some "squares positives:") (to_list (squares positives) 10)
 let _ = show (pp_print_int) (Some "counter:") (to_list (counter dummy) 10)
 let _ = show (pp_print_int) (Some "pre positives:") (to_list (pre 0 positives) 10)
@@ -65,3 +53,11 @@ let _ = show (pp_print_int) (Some "pre with ref:")(to_list (pref_with_ref 0 posi
 let _ = show (pp_print_int) (Some "sum with ref:")(to_list (sum_with_ref positives) 10)
 let _ = Format.fprintf std_formatter "done.\n"
     
+
+(* let get : 'r cell -> ('a, 'x) co -> ('r * 'a, 'x) co =
+  fun r (Co (h,x)) -> 
+    Co ((fun x -> let (a,x') = h x in ((!(r.content), a), x')) , x) *)
+
+    (* let set : 'r cell -> ('r * 'a, 'x) co -> ('a, 'x) co = 
+      fun r (Co (h, x)) -> 
+        Co ((fun x -> let ((v,a), x') = h x in r.content := v; (a,x')), x) *)
