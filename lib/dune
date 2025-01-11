@@ -1,3 +1,4 @@
+(include_subdirs qualified)
 (library
  (name ocamlfrp)
- (public_name ocamlfrp.streams))
+ (public_name ocamlfrp))

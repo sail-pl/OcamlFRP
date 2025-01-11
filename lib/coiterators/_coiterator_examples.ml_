@@ -1,4 +1,3 @@
-open Coiterator
 
 let _map (f : 'a -> 'b) : (('a, 'c) co -> ('b, 'c) co) = 
   fun (Co (g, s)) -> 

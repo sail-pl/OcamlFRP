@@ -1,6 +1,4 @@
-open Util
-open Coiterator
-open Yampa
+open Coiterators
 
 type 'a cell = {content : 'a ref}
 

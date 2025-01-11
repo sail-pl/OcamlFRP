@@ -1,8 +1,9 @@
 open Format
 open Fmt
-open Ocamlfrp.Util
-open Ocamlfrp.Coiterator
-open Ocamlfrp.Yampa
+
+open Ocamlfrp.Utils
+open Ocamlfrp.Coiterators
+open Ocamlfrp.Arrows
 open Ocamlfrp.References
 
 (* STREAMS *)
@@ -11,11 +12,16 @@ open Ocamlfrp.References
 
 let dummy : (unit, unit) co = Co (dup, ())
 
-(* stream of positive integers *)
+  (* stream of positive integers *)
 
 let positives : (int, int) co = Co ((mapright ((+) 1) << dup), 0) 
 
 (* STREAM FUNCTIONS WITHOUT LOOPS *)
+
+let identity : ('a,'s) sf = SF (arr (fun x-> x))
+
+
+let identity : ('a,'s) co -> ('a, 's * unit) co = arr (fun x-> x)
 
 let plus_left = arr dup >>> first (arr (( + ) 1))
 

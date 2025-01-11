@@ -1,5 +1,14 @@
-open Coiterator
-open Util
+open Coiterators
+open Utils
+
+let value : ('a,'b) co -> 'a = fun (Co (h,s)) -> fst (h s)
+let nextstate : ('a,'b) co -> 'b = fun (Co (h,s)) -> snd (h s)
+
+let permutright : ('a * 'b) * 'c -> 'a * ('b * 'c) =
+  fun ((a,b),c) -> (a, (b,c))
+
+let permutleft : 'a * ('b * 'c) -> ('a * 'b) * 'c =
+  fun (a,(b,c)) -> ((a,b),c)
 
 (** split *)
 let split : 'a 'b 'c. ('a * 'b, 's) co -> ('a, 's) co * ('b, 's) co =
@@ -34,54 +43,56 @@ let arr : 'a 'b 's. ('a -> 'b) -> ('a, 's) co -> ('b, ('s * unit)) co =
    - head ((arr f) s) = f (head s) 
    - tail ((arr f) s) = arr f (tail s) *)
 
+(** The unary [first] operator applies a stream function to the left members of a stream of pairs.*)
+
 let first : 'a  'b 'c 's1 's2. 
   (('a, 's1) co -> ('b, 's1 *'s2) co) -> 
     ('a * 'c, 's1) co -> ('b * 'c, 's1 * 's2) co =
-  fun f c ->
-    let (c1, c2) = split c in join (f c1) c2
-
-(** The unary [first] operator applies a stream function to the left members of a stream of pairs.*)
- 
-
+  fun f (Co (h, s))  ->
+    let Co (h1, (s1,s2)) = f (Co ((mapleft fst << h), s)) in
+      Co (
+          (fun (s1,s2) -> 
+            let (a, (s1',s2')) = h1 (s1,s2) 
+            and b = fst ((mapleft snd << h) s1) in 
+              (a,b), (s1',s2')
+          ), (s1,s2))
+          
+(** The binary composition operator (>>>) composes two operators.*)
 let (>>>) : 
   (('a,'s1) co -> ('b, 's1 * 's2) co) -> 
     (('b,'s1 * 's2) co -> ('c, ('s1 * 's2) * 's3) co) -> 
       (('a,'s1) co -> ('c, 's1 * ('s2 * 's3)) co) = 
   fun f g c -> 
-    let Co (h3, ((s1,s2), s3)) = g (f c) in
-    Co ((fun (s1,(s2,s3)) -> 
-        let (c, ((s1',s2'), s3')) = h3 ((s1,s2), s3) 
-          in (c, (s1',(s2',s3')))),
-      (s1,(s2,s3)))
+    let Co (h3, s) = g (f c) in
+      Co ((mapright permutright) << h3 << permutleft, permutright s)
       
-(** The binary composition operator (>>>) composes two operators.*)
 
+(** The unary [loop] operator plugs a stream function to a register *)            
 
 let loop : ((('a * 'x), 's1) co -> (('b * 'x), 's1 * 's2) co) -> 
     'x -> ('a, 's1) co -> ('b, 's1 * ('s2 * 'x)) co = 
   fun f x0 -> 
     fun (Co (h, s1) : ('a, 's1) co) -> 
-      let f = fun x -> aux2 (f (aux1 (Co (h, s1)) x)) x in 
+      let g = fun x -> aux2 (f (aux1 (Co (h, s1)) x)) x in 
     Co ((fun (s1, (s2,x)) -> 
-      let Co (h',_) = f x in h' (s1,(s2,x))), 
-      let Co (_,s) = f x0 in s)
-
-(** The unary [loop] operator plugs a stream function to a register *)            
+      let Co (h',_) = g x in h' (s1,(s2,x))), 
+      let Co (_,s) = g x0 in s)
 
 (** Derived operators *)
 
-let constant = fun a -> arr (const a)
+let constant a = arr (const a)
 
-(* let second : (('a,'s1) co -> ('b, ('s1 * 's2)) co) -> 
-    ('c * 'a, 's1) co -> (('c * 'b), 's1 * 's2) co= 
-  fun f-> (arr swap >>> first f)  *)
+let second f =arr swap >>> first f 
 
-(* let parallel =
-  fun f g -> first f >>> second g 
+let parallel f g = first f >>> second g 
 
-let fork = 
-  fun f g -> arr dup >>> parallel f g *)
+let fork f g = arr dup >>> parallel f g
 
+
+type 'a stream = Str : ('a, 's) co -> 'a stream
+
+type ('a,'b) sf = 
+  SF : (('a, 's1) co -> ('b, 's1 * 's2) co) -> ('a,'b) sf
 
   (*
 
@@ -117,3 +128,14 @@ let loop : ((('a * 'x), 's1) co -> (('b * 'x), 's2) co) -> 'x -> ('a, 's1) co ->
           (a,b), (s1',s2')
       ), (s1,s2))
       *)
+
+      (* let (>>>) : 
+  (('a,'s1) co -> ('b, 's1 * 's2) co) -> 
+    (('b,'s1 * 's2) co -> ('c, ('s1 * 's2) * 's3) co) -> 
+      (('a,'s1) co -> ('c, 's1 * ('s2 * 's3)) co) = 
+  fun f g c -> 
+    let Co (h3, ((s1,s2), s3)) = g (f c) in
+    Co ((fun (s1,(s2,s3)) -> 
+        let (c, ((s1',s2'), s3')) = h3 ((s1,s2), s3) 
+          in (c, (s1',(s2',s3')))),
+      (s1,(s2,s3))) *)

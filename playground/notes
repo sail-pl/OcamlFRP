@@ -1,5 +1,6 @@
 
-
+# split the two functions of iterators
+# use gadt to hide states in types 
 
 
 (*  A PROUVER : les fonctions Yampa génére des sf qui ne modifient pas l'état !!! *)

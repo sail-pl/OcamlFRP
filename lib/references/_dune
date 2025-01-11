@@ -1,0 +1,4 @@
+(library
+ (name references)
+ (libraries ocamlfrp.structures fmt)
+ (public_name ocamlfrp.references))

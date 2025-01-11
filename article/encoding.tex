@@ -1,0 +1,129 @@
+Combinators have type \(\YSF{a}{b} = SF\ (\raw~a~s_1 \rightarrow \raw~b~(s_1 \times s_2))\) where,
+intuitively, $s_2$ is the additional state introduced by the combinator.
+When the combinator doest not need to increase the state size, i.e. when it does not contain
+loops, \(s_2\) is simply \(\unittype\). This may seem 
+
+\begin{equation*}
+\begin{array}{lcl}
+    \YArrow & : & (a \rightarrow b) \rightarrow (\raw\ a\ s) 
+        \rightarrow (\raw\ a\ (s \times \unittype))\\
+    \YArrow~f & = & \lambda~(\Co\ h\ s).
+        \Co (\lambda (s,\unitval). \letin{(a,s')}{h\ s}{(f~a, (s',\unitval))})\ (s,\unitval)\\\\
+    \YFirst & : & (\raw\ a\ s_1 \rightarrow \raw\ b\ (s_1 \times s_2)) \rightarrow 
+                      (\raw\ (a \times c)\ s_1 \rightarrow \raw\ (b \times c)\ (s_1 \times s_2))\\
+    \\\\
+    \YCompose & : & (\raw\ a\ s_1 \rightarrow \raw\ b (s_1\times s_2)) \rightarrow \\
+    && \qquad (\raw\ b\ (s_1 \times s_2) \rightarrow \raw\ c ((s_1\times s_2) \times s_3)) \rightarrow \\
+    && \qquad\qquad (\raw\ a\ s_1 \rightarrow \raw\ c (s_1 \times (s_2 \times s_3)))\\
+    \\\\
+    \YLoop & : & (\raw\ (a \times x)\ s_1 \rightarrow \raw\ (b \times x)\ (s_1 \times s_2))
+        \rightarrow \\
+    && \qquad x \rightarrow \raw\ a\ s_1 \rightarrow \raw\ b\ s_1 \times (s_2 \times s_3) 
+\end{array}
+\end{equation*}
+
+\begin{equation}
+    \begin{array}{lcl}
+        dummy &:& \raw\ \unittype\ \unittype\\
+        dummy &=& \Co\ dup\ \unitval\\\\
+        natural &:& \raw\ nat\ nat\\
+        natural &=& \Co\ ((mapright\ S << dup))\ 0\\\\
+    \end{array}
+\end{equation}
+
+\begin{equation}
+    \begin{array}{lcl}
+        identity &:& \co\ a \ s \rightarrow \co\ a \ (s \times \unittype)\\
+        identity &=& \YArrow (\lambda x.x)\\\\ 
+        plusleft &:& \co\ int\ s \rightarrow \co\ (int * int)\ (\unittype \times (\unittype \times \unittype))\\
+        plusleft & = & \YArrow\ dup \YCompose \YFirst\ (\YArrow\ S)\\\\
+        counter & : & \co\ \unittype\ \unittype \rightarrow \co\ {\tt{nat}}\ (\unittype \times (\unittype \times \unittype))\\
+        counter & = & \YLoop\ (\YArrow ({\mathit{mapright}}\ S) \circ {\mathit{dup}} \circ {\mathit{snd}})\ 0\\\\
+        pre &:& a \rightarrow \co\ a\ s \rightarrow \co\ a\ (s \times (\unittype \times a))\\
+        pre &=& \YLoop (\YArrow {\mathit{swap}})  
+    \end{array}
+\end{equation}
+
+% let plus_left = arr dup >>> first (arr (( + ) 1))
+
+% let squares = arr dup >>> (arr (uncurry ( * )))
+
+% (* STREAM FUNCTIONS WITH LOOPS *)
+
+% let counter = loop (arr (mapright (( + ) 1) << dup << snd)) 0
+  
+% let pre = loop (arr swap)
+
+% let sum = loop (arr (dup << uncurry ( + ))) 0
+
+% let loop : ((('a * 'x), 's1) co -> (('b * 'x), 's1 * 's2) co) -> 
+%     'x -> ('a, 's1) co -> ('b, 's1 * ('s2 * 'x)) co = 
+
+% let first : 'a  'b 'c 's1 's2. 
+%   (('a, 's1) co -> ('b, 's1 *'s2) co) -> 
+%     ('a * 'c, 's1) co -> ('b * 'c, 's1 * 's2) co =
+%   fun f (Co (h, s))  ->
+%     let Co (h1, (s1,s2)) = f (Co ((mapleft fst << h), s)) in
+%       Co (
+%           (fun (s1,s2) -> 
+%             let (a, (s1',s2')) = h1 (s1,s2) 
+%             and b = fst ((mapleft snd << h) s1) in 
+%               (a,b), (s1',s2')
+%           ), (s1,s2))
+
+% let (>>>) : 
+%   (('a,'s1) co -> ('b, 's1 * 's2) co) -> 
+%     (('b,'s1 * 's2) co -> ('c, ('s1 * 's2) * 's3) co) -> 
+%       (('a,'s1) co -> ('c, 's1 * ('s2 * 's3)) co) = 
+%   fun f g c -> 
+%     let Co (h3, s) = g (f c) in
+%       Co ((mapright permutright) << h3 << permutleft, permutright s)
+      
+
+% (** The unary [loop] operator plugs a stream function to a register *)            
+
+% let loop : ((('a * 'x), 's1) co -> (('b * 'x), 's1 * 's2) co) -> 
+%     'x -> ('a, 's1) co -> ('b, 's1 * ('s2 * 'x)) co = 
+%   fun f x0 -> 
+%     fun (Co (h, s1) : ('a, 's1) co) -> 
+%       let g = fun x -> aux2 (f (aux1 (Co (h, s1)) x)) x in 
+%     Co ((fun (s1, (s2,x)) -> 
+%       let Co (h',_) = g x in h' (s1,(s2,x))), 
+%       let Co (_,s) = g x0 in s)
+
+
+The arrow combinator adds no additional state, thus the return type \(\raw\ a\ (s \times \unittype)\).
+
+Let \({\tt{Type}}\) be the bicartesian closed category of types. 
+We define the category $C$ as the category whose objects are
+the \(\Sigma_{s:{\tt{Type}}}\ \raw\ a\ s\) for every \(a : {\tt{Type}}\)
+and morphisms from object \(a\) to object \(b\) belongs to
+\begin{equation*}
+    \forall s_1,s_2:{\tt{Type}}. \raw\ a\ s_1 \rightarrow \raw\ b\ (s_1 \times s_2)
+\end{equation*}
+
+\begin{lemma}
+    For all \(a\ b\ c : {\tt{Type}}\) and for all 
+    \begin{itemize}
+    \item $F : \forall s_1\ s_2. \raw\ a\ s_1 \rightarrow \raw\ b\ (s_1 \times s_2)$,
+    \item $G : \forall s_1\ s_2.\raw\ b\ s_1 \rightarrow \raw\ c\ (s_1 \times s_2)$,
+    \item $H : \forall s_1\ s_2.\raw\ c\ s_1 \rightarrow \raw\ d\ (s_1 \times s_2)$,
+    \end{itemize}
+    The following equalities hold.
+    \begin{itemize}
+    \item \(identity_a \YCompose F = F\) 
+    \item \(F \YCompose identity_b = F \) 
+    \item \((F \YCompose G) \YCompose H = F \YCompose (G \YCompose H) \) 
+    \end{itemize}
+\end{lemma}
+
+\begin{itemize}
+    \item all frp operators are polymorphic in the state of the coiterators passed as input 
+    (which is a good thing, the computation should not depend on the representation)
+    f l1 = f l2 si l1 et l2 représentent les memes suites de valeurs
+\end{itemize}
+
+\begin{itemize}
+    \item sf are function that transform concrete streams 
+    \item example where we augment the state
+\end{itemize}
