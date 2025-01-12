@@ -1,43 +1,44 @@
 open Format
 open Fmt
-
-open Ocamlfrp.Utils
-open Ocamlfrp.Coiterators
 open Ocamlfrp.Arrows
-open Ocamlfrp.References
+
+(* open Ocamlfrp.References *)
 
 (* STREAMS *)
 
-(* stream of () *)
+(** stream of () *)
 
-let dummy : (unit, unit) co = Co (dup, ())
+let dummy : unit stream = constant ()
 
-  (* stream of positive integers *)
+(** stream of positive integers *)
 
-let positives : (int, int) co = Co ((mapright ((+) 1) << dup), 0) 
+let positives : int stream = fold ((+) 1) 0
 
 (* STREAM FUNCTIONS WITHOUT LOOPS *)
 
-let identity : ('a,'a) sf = arr (fun x-> x)
+let identity : ('a,'a) sf = arr Fun.id
 
-(* let identity : ('a,'s) sf = SF (arr (fun x-> x)) *)
+let plus_left : (int, int * int) sf = 
+  arr Ocamlfrp.Utils.dup >>> first (arr (( + ) 1)) 
 
-
-(* let identity : 'a. ('a,'a) sf = arr (fun x-> x) *)
-
-let plus_left = arr dup >>> first (arr (( + ) 1)) 
-
-let squares = arr dup >>> (arr (uncurry ( * )))
+let squares : (int,int) sf = 
+  arr Ocamlfrp.Utils.dup >>> (arr (Ocamlfrp.Utils.uncurry ( * )))
 
 (* STREAM FUNCTIONS WITH LOOPS *)
 
- let counter = loop (arr (mapright (( + ) 1) << dup << snd)) 0
+let counter : ('a, int) sf = 
+  let open Ocamlfrp.Utils in 
+    loop (arr (mapright (( + ) 1) << dup << snd)) 0
   
-let pre = loop (arr swap)
+let pre : 'a -> ('a,'a) sf = 
+  loop (arr Ocamlfrp.Utils.swap)
 
-let sum = loop (arr (dup << uncurry ( + ))) 0 
+let sum : (int, int) sf = 
+  let open Ocamlfrp.Utils in 
+  loop (arr (dup << uncurry ( + ))) 0 
   
 (* STREAM FUNCTIONS WITH REFERENCES *)
+
 (*
  let counter_with_ref : (unit, unit) co -> (int, unit * ((unit * unit) * unit)) co = 
   let r = mkref 0 in 
@@ -50,34 +51,18 @@ let sum_with_ref =
   let r = mkref 0 in 
     get r >>> arr (dup << uncurry (+)) >>> set r*)
 
-(* apply co -> co, non car le type existentiel s'échappe *)
-
-let apply = 
-  fun (SF { fx = f}) (Str c) -> Str(f c)
-
-let apply_list : ('a, 'b) sf -> ('a,'s) co -> int -> 'n list = 
-  fun (SF { fx = f}) c n ->
-      let rec unfold c n = 
-          if n <= 0 then [] 
-          else 
-            let (Co (h,s)) = c in
-            let (a,s') = h s in 
-              a::(unfold (Co (h,s')) (n-1))
-          in unfold (f c) n
-
-
-let _ = show (pp_print_int) (Some "positives:") (to_list positives 10)
-let _ = show (pair pp_print_int pp_print_int) (Some "plust_left:") 
-  (apply_list plus_left positives 10)
-(* let _ = show (pair pp_print_int pp_print_int) (Some "plust_left:") (to_list (plus_left positives) 10) *)
-(* let _ = show (pp_print_int) (Some "squares positives:") (to_list (squares positives) 10)
-let _ = show (pp_print_int) (Some "counter:") (to_list (counter dummy) 10)
-let _ = show (pp_print_int) (Some "pre positives:") (to_list (pre 0 positives) 10)
-let _ = show (pp_print_int) (Some "sum positives:")(to_list (sum positives) 10)
+let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "positives:") (list_of_stream (apply identity positives) 10) 
+let _ = Ocamlfrp.Utils.show (pair pp_print_int pp_print_int) (Some "plust_left:")  (list_of_stream (apply plus_left positives) 10)
+let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "squares positives:") (list_of_stream (apply squares positives) 10)
+let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "counter:") (list_of_stream (apply counter dummy) 10)
+let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "pre positives:") (list_of_stream (apply (pre 0) positives) 10)
+let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "sum positives:")(list_of_stream (apply sum positives) 10)
+(*
 let _ = show (pp_print_int) (Some "counter with ref:")(to_list (counter_with_ref dummy) 10)
 let _ = show (pp_print_int) (Some "pre with ref:")(to_list (pref_with_ref 0 positives) 10)
 let _ = show (pp_print_int) (Some "sum with ref:")(to_list (sum_with_ref positives) 10)
-let _ = Format.fprintf std_formatter "done.\n" *)
+let _ = Format.fprintf std_formatter "done.\n" 
+*)
     
 
 (* let get : 'r cell -> ('a, 'x) co -> ('r * 'a, 'x) co =

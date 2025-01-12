@@ -21,4 +21,11 @@ let mapleft (f : 'a -> 'b) (p : 'a * 'c) =
     
 let mapright (f : 'a -> 'b) (p : 'c * 'a) = 
   let (c,a) = p in (c,f a)
+
+let permutright : ('a * 'b) * 'c -> 'a * ('b * 'c) =
+  fun ((a,b),c) -> (a, (b,c))
+
+let permutleft : 'a * ('b * 'c) -> ('a * 'b) * 'c =
+  fun (a,(b,c)) -> ((a,b),c)
+  
   
