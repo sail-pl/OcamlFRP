@@ -1,4 +1,0 @@
-(library
- (name arrows)
- (libraries ocamlfrp.structures fmt)
- (public_name ocamlfrp.arrows))

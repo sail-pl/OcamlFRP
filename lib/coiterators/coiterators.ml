@@ -11,8 +11,8 @@
 type ('a,'s) co = 
   | Co of ('s -> ('a * 's)) * 's 
 
-let head (Co (h,s)) = fst (h s)
-let tail (Co (h,s)) = snd (h s)
+let _head (Co (h,s)) = fst (h s)
+let _tail (Co (h,s)) = snd (h s)
 
 (* for testing purpose *)
 let from_list (l : 'a list) (a :'a) : ('a, 'a list) co =

@@ -4,12 +4,12 @@ synopsis: "An Ocaml Arrowized FRP library"
 description: "An Ocaml Arrowized FRP library based on coiterators"
 maintainer: ["frederic.dabrowski@univ-orleans.fr"]
 authors: ["frederic.dabrowski@univ-orleans.fr"]
-license: "LICENSE"
+license: "AGPL-3.0-only"
 tags: [
   "functional reactive programming" "arrows" "coiterators" "your" "project"
 ]
 homepage: "https://github.com/DabrowskiFr/ocamlfrp"
-doc: "https://url/to/documentation"
+doc: "https://github.com/DabrowskiFr/ocamlfrp/wiki"
 bug-reports: "https://github.com/DabrowskiFr/ocamlfrp/issues"
 depends: [
   "dune" {>= "3.17"}
