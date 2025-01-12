@@ -13,7 +13,7 @@
 
 (license AGPL-3.0-only)
 
-(documentation https://github.com/DabrowskiFr/ocamlfrp/wiki)
+(documentation https://dabrowskifr.github.io/ocamlfrp/)
 
 (package
  (name ocamlfrp)
