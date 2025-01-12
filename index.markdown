@@ -5,4 +5,14 @@
 layout: home
 ---
 
-Ocaml FRP is an ocaml library for reactive programming
+Ocaml FRP is an ocaml library for reactive programming.
+
+
+
+
+{% highlight ocaml %}
+val arr : ('a -> 'b) -> ('a, 'b) sf
+val first : ('a, 'b) sf -> ('a * 'c, 'a * 'c) sf
+val (>>>) : ('a, 'b) sf -> ('b, 'c) sf -> ('a, 'c) sf
+val (loop) : ('a * c, 'b * 'c) sf -> ('a, 'b) sf
+{% endhighlight %}
