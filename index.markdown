@@ -4,3 +4,5 @@
 
 layout: home
 ---
+
+Ocaml FRP is an ocaml library for reactive programming
