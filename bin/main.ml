@@ -1,8 +1,9 @@
 open Format
 open Fmt
+
 open Ocamlfrp.Arrows
 
-(* open Ocamlfrp.References *)
+open Ocamlfrp.References
 
 (* STREAMS *)
 
@@ -39,17 +40,19 @@ let sum : (int, int) sf =
   
 (* STREAM FUNCTIONS WITH REFERENCES *)
 
-(*
- let counter_with_ref : (unit, unit) co -> (int, unit * ((unit * unit) * unit)) co = 
+let counter_with_ref  : ('a, int) sf = 
+  let open Ocamlfrp.Utils in 
   let r = mkref 0 in 
-    get r >>> arr ((mapleft (( + ) 1)) << dup << snd) >>> set r
-    
-let pref_with_ref v = 
-  let r = mkref v in get r >>> set r
+    get r >>> arr ((mapright (( + ) 1)) << dup << snd) >>> set r
 
-let sum_with_ref =
+let pref_with_ref : 'a -> ('a,'a) sf = 
+  fun v -> 
+    let r = mkref v in get r >>> (arr Ocamlfrp.Utils.swap) >>> set r
+    
+let sum_with_ref : (int, int) sf =
+  let open Ocamlfrp.Utils in 
   let r = mkref 0 in 
-    get r >>> arr (dup << uncurry (+)) >>> set r*)
+    get r >>> arr (dup << uncurry (+)) >>> set r
 
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "positives:") (list_of_stream (apply identity positives) 10) 
 let _ = Ocamlfrp.Utils.show (pair pp_print_int pp_print_int) (Some "plust_left:")  (list_of_stream (apply plus_left positives) 10)
@@ -57,18 +60,7 @@ let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "squares positives:") (list_of_
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "counter:") (list_of_stream (apply counter dummy) 10)
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "pre positives:") (list_of_stream (apply (pre 0) positives) 10)
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "sum positives:")(list_of_stream (apply sum positives) 10)
-(*
-let _ = show (pp_print_int) (Some "counter with ref:")(to_list (counter_with_ref dummy) 10)
-let _ = show (pp_print_int) (Some "pre with ref:")(to_list (pref_with_ref 0 positives) 10)
-let _ = show (pp_print_int) (Some "sum with ref:")(to_list (sum_with_ref positives) 10)
+let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "counter with ref:")(list_of_stream (apply counter_with_ref dummy) 10)
+let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "pre with ref:")(list_of_stream (apply (pref_with_ref 0) positives) 10)
+let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "sum with ref:")(list_of_stream (apply sum_with_ref positives) 10)
 let _ = Format.fprintf std_formatter "done.\n" 
-*)
-    
-
-(* let get : 'r cell -> ('a, 'x) co -> ('r * 'a, 'x) co =
-  fun r (Co (h,x)) -> 
-    Co ((fun x -> let (a,x') = h x in ((!(r.content), a), x')) , x) *)
-
-    (* let set : 'r cell -> ('r * 'a, 'x) co -> ('a, 'x) co = 
-      fun r (Co (h, x)) -> 
-        Co ((fun x -> let ((v,a), x') = h x in r.content := v; (a,x')), x) *)

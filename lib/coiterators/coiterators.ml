@@ -11,9 +11,6 @@
 type ('a,'s) co = 
   | Co of ('s -> ('a * 's)) * 's 
 
-let _head (Co (h,s)) = fst (h s)
-let _tail (Co (h,s)) = snd (h s)
-
 (* for testing purpose *)
 let from_list (l : 'a list) (a :'a) : ('a, 'a list) co =
     Co ((fun l -> match l with [] -> (a,l) | h::t -> (h, t)), l)

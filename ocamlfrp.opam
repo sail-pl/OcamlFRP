@@ -9,7 +9,7 @@ tags: [
   "functional reactive programming" "arrows" "coiterators" "your" "project"
 ]
 homepage: "https://github.com/DabrowskiFr/ocamlfrp"
-doc: "https://github.com/DabrowskiFr/ocamlfrp/wiki"
+doc: "https://dabrowskifr.github.io/ocamlfrp/"
 bug-reports: "https://github.com/DabrowskiFr/ocamlfrp/issues"
 depends: [
   "dune" {>= "3.17"}
