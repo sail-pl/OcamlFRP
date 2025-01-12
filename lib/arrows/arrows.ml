@@ -33,6 +33,9 @@ let aux2 (Co (h, (s1,s2) ) : ('a * 'x, ('s1 * 's2)) co) : 'x -> ('a, ('s1 *('s2 
 
 (********************************************************)
 
+module Raw = 
+    struct 
+
 let arr : 'a 'b 's. ('a -> 'b) -> ('a, 's) co -> ('b, ('s * unit)) co = 
   fun f (Co (h, s)) -> 
     Co ((fun (s,()) -> let (a,s') = h s in (f a, (s',()))), 
@@ -58,7 +61,7 @@ let first : 'a  'b 'c 's1 's2.
           ), (s1,s2))
           
 (** The binary composition operator (>>>) composes two operators.*)
-let (>>>) : 
+let (>>>) : 'a 'b 'c 's1 's2 's3.
   (('a,'s1) co -> ('b, 's1 * 's2) co) -> 
     (('b,'s1 * 's2) co -> ('c, ('s1 * 's2) * 's3) co) -> 
       (('a,'s1) co -> ('c, 's1 * ('s2 * 's3)) co) = 
@@ -69,7 +72,7 @@ let (>>>) :
 
 (** The unary [loop] operator plugs a stream function to a register *)            
 
-let loop : ((('a * 'x), 's1) co -> (('b * 'x), 's1 * 's2) co) -> 
+let loop : 'a 'b 'x 's1 's2. ((('a * 'x), 's1) co -> (('b * 'x), 's1 * 's2) co) -> 
     'x -> ('a, 's1) co -> ('b, 's1 * ('s2 * 'x)) co = 
   fun f x0 -> 
     fun (Co (h, s1) : ('a, 's1) co) -> 
@@ -78,64 +81,63 @@ let loop : ((('a * 'x), 's1) co -> (('b * 'x), 's1 * 's2) co) ->
       let Co (h',_) = g x in h' (s1,(s2,x))), 
       let Co (_,s) = g x0 in s)
 
+    end
+
+type 'a stream = Str : ('a, 's) co -> 'a stream
+
+(* rename fx in sf *)
+(* use type stream ? *)
+
+(* sf does not work on streams because we need s1 -> s * s2 *)
+type ('a,'b) sf = 
+    SF : {fx : 's. (('a, 's) co -> ('b, 's * 's2) co)} ->('a,'b) sf
+
+let arr : 'a 'b. ('a -> 'b) -> ('a,'b) sf =
+  fun f ->
+    SF {fx = 
+          (fun (Co (h, s)) ->
+            Co ((fun (s,()) -> let (a,s') = h s in (f a, (s',()))), 
+          (s,())))}
+
+let first : 'a  'b 'c. ('a, 'b) sf -> ('a * 'c, 'b * 'c) sf =
+  fun (SF {fx=f}) -> 
+    SF {fx = 
+    fun (Co (h, s))  ->
+      let Co (h1, (s1,s2)) = f (Co ((mapleft fst << h), s)) in
+        Co (
+            (fun (s1,s2) -> 
+              let (a, (s1',s2')) = h1 (s1,s2) 
+              and b = fst ((mapleft snd << h) s1) in 
+                (a,b), (s1',s2')
+            ), (s1,s2))
+    }
+
+let (>>>) : ('a, 'b) sf -> ('b,'c) sf -> ('a, 'c) sf =
+  fun (SF {fx = f})
+    (SF {fx = g}) ->
+      SF {fx = 
+        fun c -> 
+          let Co (h3, s) = g (f c) in
+          Co ((mapright permutright) << h3 << permutleft, permutright s)}
+      
+let loop : ('a * 'x, 'b * 'x) sf -> 'x -> ('a, 'b) sf =
+  fun (SF {fx = f}) x0 -> 
+    SF {fx = 
+      fun (Co (h, s1)) -> 
+        let g = fun x -> aux2 (f (aux1 (Co (h, s1)) x)) x in 
+          Co ((fun (s1, (s2,x)) -> 
+              let Co (h',_) = g x in h' (s1,(s2,x))), 
+              let Co (_,s) = g x0 in s)
+      }
+                
 (** Derived operators *)
 
 let constant a = arr (const a)
 
-let second f =arr swap >>> first f 
+let second f = arr swap >>> first f 
 
 let parallel f g = first f >>> second g 
 
 let fork f g = arr dup >>> parallel f g
 
 
-type 'a stream = Str : ('a, 's) co -> 'a stream
-
-type ('a,'b) sf = 
-  SF : (('a, 's1) co -> ('b, 's1 * 's2) co) -> ('a,'b) sf
-
-  (*
-
-  let arr : 'a 'b 'c. ('a -> 'b) -> ('a, 'c) co -> ('b, 'c) co = 
-  fun f (Co (h, s)) -> Co (((mapleft f) << h), s)
-
-   let first : 'a  'b 'c 's1 's2. 
-  (('a, 's1) co -> ('b, 's2) co) -> ('a * 'c, 's1) co -> ('b * 'c, 's2 * 's1) co =
-    fun f c ->
-      let (c1, c2) = split c in join (f c1) c2
-  
-      let (>>>) : (('a,'s1) co -> ('b, 's2) co) -> (('b,'s2) co -> ('c, 's3) co) -> 
-  (('a,'s1) co -> ('c, 's3) co) = 
-  fun f g c -> g (f c)
-  
-let loop : ((('a * 'x), 's1) co -> (('b * 'x), 's2) co) -> 'x -> ('a, 's1) co -> ('b, 's2 * 'x) co = 
-  fun f x0 -> fun (Co (h, s1) : ('a, 's1) co) -> 
-    Co ( 
-        (fun (s2, x) -> 
-          let (Co (h', _)) = aux2 (f (aux1 (Co (h,s1)) x)) x 
-            in h' (s2,x)),
-          let (Co (_, s)) = aux2 (f (aux1 (Co (h,s1)) x0)) x0 
-            in s)
-
-
-            let aux2 (Co (h, s) : ('a * 'x, 's) co) : 'x -> ('a, 's * 'x) co =
-  fun x0 -> Co ((fun (s, _) -> let ((a,x'), s') = h s in (a, (s',x'))), (s, x0))
-
-  let join : 'a 'b 's1 's2. ('a, 's1) co -> ('b, 's2) co -> ('a * 'b, 's1 * 's2) co =
-  fun (Co (h1,s1)) (Co (h2,s2)) ->
-  Co ((fun (s1,s2) -> 
-        let (a,s1') = h1 s1 and (b, s2') = h2 s2 in 
-          (a,b), (s1',s2')
-      ), (s1,s2))
-      *)
-
-      (* let (>>>) : 
-  (('a,'s1) co -> ('b, 's1 * 's2) co) -> 
-    (('b,'s1 * 's2) co -> ('c, ('s1 * 's2) * 's3) co) -> 
-      (('a,'s1) co -> ('c, 's1 * ('s2 * 's3)) co) = 
-  fun f g c -> 
-    let Co (h3, ((s1,s2), s3)) = g (f c) in
-    Co ((fun (s1,(s2,s3)) -> 
-        let (c, ((s1',s2'), s3')) = h3 ((s1,s2), s3) 
-          in (c, (s1',(s2',s3')))),
-      (s1,(s2,s3))) *)
