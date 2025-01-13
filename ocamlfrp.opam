@@ -12,7 +12,7 @@ homepage: "https://github.com/DabrowskiFr/ocamlfrp"
 doc: "https://dabrowskifr.github.io/ocamlfrp/"
 bug-reports: "https://github.com/DabrowskiFr/ocamlfrp/issues"
 depends: [
-  "dune" {>= "3.17"}
+  "dune" {>= "3.16"}
   "ocaml"
   "odoc" {with-doc}
 ]
