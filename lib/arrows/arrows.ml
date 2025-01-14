@@ -20,11 +20,18 @@ let rec perform : 'a stream -> ('a -> unit) -> int -> unit =
   fun s f n ->
     if n <= 0 then ()
     else 
-      print_int n; print_newline ();
       let (Str ((Co (h,s)))) =  s in 
       let (a,s') = h s in f a; 
         perform (Str ((Co (h,s')))) f (n-1)
-    
+
+let rec tperform : 'a stream -> ('a -> unit) -> float option -> unit = 
+  fun s f d ->
+    let (Str ((Co (h,s)))) =  s in 
+    let (a,s') = h s in f a;
+      (* print_string "a\n"; flush stdout; *)
+      match d with None -> () | Some t -> Thread.delay t;
+      tperform (Str ((Co (h,s')))) f d
+        
 
 type ('a,'b) sf = 
     SF : {fx : 's. (('a, 's) co -> ('b, 's * 's2) co)} ->('a,'b) sf
