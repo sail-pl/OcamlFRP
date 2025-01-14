@@ -17,7 +17,7 @@ val coiterate : ('s -> 'a * 's) -> 's -> 'a stream
     
 (** [list_of_stream s n] returns the first [n] elements of [s] as a list. *)
     val list_of_stream : 'a stream -> int -> 'a list
-
+val perform : 'a stream -> ('a -> unit) -> int -> unit
     (* hd, tl ?? *)
 
 (** {1 Stream functions} *)

@@ -16,6 +16,16 @@ let list_of_stream : 'a stream -> int -> 'a list =
   fun (Str s : 'a stream) (n : int) : 'a list ->
     to_list s n
 
+let rec perform : 'a stream -> ('a -> unit) -> int -> unit = 
+  fun s f n ->
+    if n <= 0 then ()
+    else 
+      print_int n; print_newline ();
+      let (Str ((Co (h,s)))) =  s in 
+      let (a,s') = h s in f a; 
+        perform (Str ((Co (h,s')))) f (n-1)
+    
+
 type ('a,'b) sf = 
     SF : {fx : 's. (('a, 's) co -> ('b, 's * 's2) co)} ->('a,'b) sf
 
