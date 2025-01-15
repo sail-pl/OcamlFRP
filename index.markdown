@@ -40,7 +40,7 @@ val (>>>) : ('a, 'b) sf -> ('b, 'c) sf -> ('a, 'c) sf
 val (loop) : ('a * c, 'b * 'c) sf -> ('a, 'b) sf
 {% endhighlight %}
 
-- `arr f` : the stream function that applies f pointwise
+- `ocaml arr f` : the stream function that applies f pointwise
 - first sf : the stream function that executes sf on the left component of the inputs and leaves the right component unchanged
 - sf >>> sg : the composition of sf and sg
 - loop sf v : executes sf feeding its second input with the former value of its output, v is the initial value
