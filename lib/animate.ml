@@ -1,6 +1,30 @@
 open Arrows
-open Coiterators
-open Thread
+
+module type Environment = 
+  sig 
+    (* type of input *)
+    type appinput 
+
+    (* type of output *)
+    type appoutput
+    (* init function *)
+    val init : unit -> unit
+    val stop : unit -> unit 
+    (* used to build the input stream *)
+    val input : bool -> appinput 
+    (* used to consume the ouput stream*)
+    val output : appoutput -> bool  
+  end 
+
+(* runtime for executing a sf *)
+module Engine (E : Environment)= 
+  struct
+    let run (f : ('a,'b) sf) (d : float option) = 
+        E.init ();
+        let s = coiterate (fun () -> (E.input true,())) ()  in 
+          tperform (apply f s) E.output d
+  end
+
 
 let animate : 
   (unit -> 'a) -> 

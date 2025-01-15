@@ -1,9 +1,0 @@
-(executable
- (public_name ocamlfrp_test)
- (name main)
- (libraries ocamlfrp fmt))
-
-(executable
- (public_name ocamlfrp_graph)
- (name graphic)
- (libraries ocamlfrp fmt graphics unix))

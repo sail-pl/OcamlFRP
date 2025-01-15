@@ -1,5 +1,5 @@
 (include_subdirs qualified)
 (library
  (name ocamlfrp)
- (libraries threads)
- (public_name ocamlfrp ))
+ (libraries threads graphics)
+ (public_name ocamlfrp))

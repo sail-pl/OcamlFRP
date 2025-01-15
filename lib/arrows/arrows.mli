@@ -19,7 +19,7 @@ val coiterate : ('s -> 'a * 's) -> 's -> 'a stream
     val list_of_stream : 'a stream -> int -> 'a list
     val perform : 'a stream -> ('a -> unit) -> int -> unit
 
-    val tperform : 'a stream -> ('a -> unit) -> float option -> unit
+    val tperform : 'a stream -> ('a -> bool) -> float option -> unit
     (* hd, tl ?? *)
 
 (** {1 Stream functions} *)

@@ -1,0 +1,14 @@
+(executable
+ (public_name basics)
+ (name basics)
+ (libraries ocamlfrp fmt))
+
+(executable
+ (public_name stdin)
+ (name stdin)
+ (libraries ocamlfrp fmt))
+
+(executable
+ (public_name graphic)
+ (name graphic)
+ (libraries ocamlfrp fmt graphics unix))

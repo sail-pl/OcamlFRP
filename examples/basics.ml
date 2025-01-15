@@ -1,9 +1,6 @@
 open Format
 open Fmt
-open Ocamlfrp.Animate
-
 open Ocamlfrp.Arrows
-
 open Ocamlfrp.References
 
 (* STREAMS *)
@@ -65,15 +62,7 @@ let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "counter with ref:")(list_of_st
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "pre with ref:")(list_of_stream (apply (pref_with_ref 0) positives) 10)
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "sum with ref:")(list_of_stream (apply sum_with_ref positives) 10)
 let _ = Format.fprintf std_formatter "done.\n" 
+let _ =   print_newline ();
 
-(* let _ = 
-  perform (* map *)
-  positives 
-  (fun n -> print_int n; print_newline ()) 10 *)
 
-let read = fun () -> input_char Stdlib.stdin
-let write = fun c -> 
-  Format.fprintf std_formatter "%c\n" c
 
-let _ = 
-  animate read (arr (fun x -> x)) write 10
