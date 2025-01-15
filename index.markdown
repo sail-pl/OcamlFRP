@@ -16,10 +16,10 @@ Streams can be produced and consumed using the following functions:
   val consume : 'a stream -> ('a -> bool) -> float option -> unit
 {% endhighlight %}
 
-- [coiterate f s] constructs a stream using the coiterator [(f, s)], where [f] is the function and [s] is the initial state.
-- [fold f x] generates a stream by iteratively applying the function [f] to the current value, starting with [x].
-- [constant x] returns a constant stream where every element has the value [x].
-- [consume s f t] applies the function [f] to all elements of the stream [s], with a delay of [t] between each application.
+- `coiterate f s` constructs a stream using the coiterator [(f, s)], where [f] is the function and [s] is the initial state.
+- `fold f x` generates a stream by iteratively applying the function [f] to the current value, starting with [x].
+- `constant x` returns a constant stream where every element has the value [x].
+- `consume s f t` applies the function [f] to all elements of the stream [s], with a delay of [t] between each application.
 
 ### Examples 
 {% highlight ocaml %}
@@ -37,13 +37,13 @@ type ('a,'b) sf
 val arr : ('a -> 'b) -> ('a, 'b) sf
 val first : ('a, 'b) sf -> ('a * 'c, 'a * 'c) sf
 val (>>>) : ('a, 'b) sf -> ('b, 'c) sf -> ('a, 'c) sf
-val (loop) : ('a * c, 'b * 'c) sf -> ('a, 'b) sf
+val (loop) : ('a * c, 'b * 'c) sf -> 'c -> ('a, 'b) sf
 {% endhighlight %}
 
-- ```ocaml arr f` : the stream function that applies f pointwise
-- first sf : the stream function that executes sf on the left component of the inputs and leaves the right component unchanged
-- sf >>> sg : the composition of sf and sg
-- loop sf v : executes sf feeding its second input with the former value of its output, v is the initial value
+- `arr f` : the stream function that applies f pointwise
+- `first sf` : the stream function that executes sf on the left component of the inputs and leaves the right component unchanged
+- `sf >>> sg` : the composition of sf and sg
+- `loop sf v` : executes sf feeding its second input with the former value of its output, v is the initial value
 
 ### Examples 
 
