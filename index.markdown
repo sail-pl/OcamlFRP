@@ -4,7 +4,6 @@
 
 layout: home
 ---
-# OcamlFRP 
 
 OCamlFRP is an OCaml library for reactive programming, which uses arrow operators, similar to those found in Yampa, to construct stream functions. Streams are defined in the Ocamlfrp.Streams module and have the type 'a stream.
 
@@ -39,6 +38,20 @@ val arr : ('a -> 'b) -> ('a, 'b) sf
 val first : ('a, 'b) sf -> ('a * 'c, 'a * 'c) sf
 val (>>>) : ('a, 'b) sf -> ('b, 'c) sf -> ('a, 'c) sf
 val (loop) : ('a * c, 'b * 'c) sf -> ('a, 'b) sf
+{% endhighlight %}
+
+- `arr f` : the stream function that applies f pointwise
+- first sf : the stream function that executes sf on the left component of the inputs and leaves the right component unchanged
+- sf >>> sg : the composition of sf and sg
+- loop sf v : executes sf feeding its second input with the former value of its output, v is the initial value
+
+### Examples 
+
+{% highlight ocaml %}
+let counter : ('a, int) sf = 
+  let open Ocamlfrp.Utils in 
+    loop (arr (mapright (( + ) 1) << dup << snd)) 0
+(* where << stands for function composition *)
 {% endhighlight %}
 
 ## Environment 
