@@ -1,7 +1,17 @@
 open Coiterators
 
+(* streams must not perform side effects *)
+
 type 'a stream = Str : ('a, 's) co -> 'a stream
 
+let head : 'a stream -> 'a =
+  fun (Str (Co (h,s))) -> 
+    fst (h s)  
+
+let tail : 'a stream -> 'a stream =
+  fun (Str (Co (h,s))) -> 
+    Str (Co (h, snd (h s)))
+  
 (* let stream_of_iterator (c : ('a,'s) co) : 'a stream = Str c
 let iterator_of_stream (Str c : 'a stream) :('a,'b) co  = c *)
 

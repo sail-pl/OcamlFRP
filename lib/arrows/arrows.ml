@@ -1,53 +1,20 @@
 open Coiterators
 open Utils
-        
-type 'a stream = Str : ('a, 's) co -> 'a stream
-
-let coiterate : 'a 's. ('s -> 'a * 's) -> 's -> 'a stream = 
-  fun h s -> Str (Co (h,s)) 
-
-let fold : 'a. ('a -> 'a) -> 'a -> 'a stream = 
-  fun f x0 -> coiterate (fun x -> let y = f x in (x,y)) x0
-
-let constant : 'a. 'a -> 'a stream =
-  fun x -> fold (Fun.const x) x
-
-let list_of_stream : 'a stream -> int -> 'a list =
-  fun (Str s : 'a stream) (n : int) : 'a list ->
-    to_list s n
-
-let rec perform : 'a stream -> ('a -> unit) -> int -> unit = 
-  fun s f n ->
-    if n <= 0 then ()
-    else 
-      let (Str ((Co (h,s)))) =  s in 
-      let (a,s') = h s in f a; 
-        perform (Str ((Co (h,s')))) f (n-1)
-
-let rec tperform : 'a stream -> ('a -> bool) -> float option -> unit = 
-  fun s f d ->
-    let (Str ((Co (h,s)))) =  s in 
-    let (a,s') = h s in 
-    let b = f a in
-      (* print_string "a\n"; flush stdout; *)
-      match d with None -> () | Some t -> Thread.delay t;
-      if b then 
-        tperform (Str ((Co (h,s')))) f d
-      else ()      
+open Stream   
 
 type ('a,'b) sf = 
     SF : {fx : 's. (('a, 's) co -> ('b, 's * 's2) co)} ->('a,'b) sf
 
 (** [apply sf s] applies the stream function sf to the stream s.*)
 let apply : ('a,'b) sf -> 'a stream -> 'b stream = 
-  fun (SF { fx = f}) (Str c) -> Str (f c)
-    
+  fun (SF  { fx = f }) (Str c) -> Str (f c)
+
 let arr : 'a 'b. ('a -> 'b) -> ('a,'b) sf =
-  fun f ->
-    SF {fx = 
-          (fun (Co (h, s)) ->
-            Co ((fun (s,()) -> let (a,s') = h s in (f a, (s',()))), 
-          (s,())))}
+fun f ->
+  SF {fx = 
+        (fun (Co (h, s)) ->
+          Co ((fun (s,()) -> let (a,s') = h s in (f a, (s',()))), 
+        (s,())))}
 
 let first : 'a  'b 'c. ('a, 'b) sf -> ('a * 'c, 'b * 'c) sf =
   fun (SF {fx=f}) -> 
@@ -86,7 +53,7 @@ let loop : ('a * 'x, 'b * 'x) sf -> 'x -> ('a, 'b) sf =
               let Co (h',_) = g x in h' (s1,(s2,x))), 
               let Co (_,s) = g x0 in s)
       }
-
+      
 let second  : ('a, 'b) sf -> ('c * 'a, 'c * 'b) sf = 
   fun f -> arr swap >>> first f >>> arr swap
 
@@ -95,3 +62,7 @@ let parallel : ('a,'b) sf -> ('c, 'd) sf -> ('a * 'c, 'b * 'd) sf =
 
 let fork : ('a, 'b) sf -> ('a, 'c) sf -> ('a, 'b * 'c) sf  = 
   fun f g -> arr dup >>> parallel f g
+
+let sf_of_stream : 'a stream -> ('b,'a) sf = 
+  fun s -> loop (arr (fun (_, s) -> (head s, tail s)))  s
+  

@@ -1,6 +1,6 @@
 open Format
 open Fmt
-
+open Ocamlfrp.Stream
 open Ocamlfrp.Arrows
 
 open Ocamlfrp.References
@@ -13,7 +13,7 @@ let dummy : unit stream = constant ()
 
 (** stream of positive integers *)
 
-let positives : int stream = fold ((+) 1) 0
+let positives : int stream = coiterate ((+) 1) 0
 
 (* STREAM FUNCTIONS WITHOUT LOOPS *)
 

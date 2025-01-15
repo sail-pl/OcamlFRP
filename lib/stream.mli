@@ -5,6 +5,9 @@ open Coiterators
     which is an infinite sequence of values of type ['a]. *)
 type 'a stream = Str : ('a, 's) co -> 'a stream
 
+val head : 'a stream -> 'a
+  
+val tail : 'a stream -> 'a stream 
 
 (** [coiterate f s] constructs a stream using the coiterator [(f, s)], 
     where [f] is the function and [s] is the initial state. *)
