@@ -10,9 +10,29 @@ open Stream
 
 (* pour les sf générés par les arrows on a une traduction vers nos sf *)
 (* celle ci est donnée ci dessous *)
+
+(* module type functor *)
+(* module type monad *)
+
+(* Functor *)
+
+type ('s, 'a) st = 
+  St : ('s -> ('a * 's)) -> ('s, 'a) st
+
+let map : ('a -> 'b) -> ('s, 'a) st -> ('s, 'b) st =
+    fun f (St t) ->
+    St (fun s -> let (a,s') = t s in (f a, s'))
   
 (* Monad *)
-(* structure de monoid sur les états *)
+
+let return : 'a -> ('s, 'a) st =
+  fun a -> St (fun s -> (a, s))
+  
+let ( >>= ) : ('s, 'a) st -> ('a -> ('s, 'b) st) -> ('s, 'b) st = 
+  fun (St t) f -> 
+    St (fun s -> 
+          let (a, s') = t s in 
+            let St t' = f a in t' s')
 
 type ('a, 'b) sf = 
   SF : ('s -> 'a -> 'b * 's) * 's -> ('a, 'b) sf
@@ -34,17 +54,20 @@ let loop : ('a * 'c, 'b * 'c) sf -> 'c -> ('a, 'b) sf =
 
 (* now we can lift sf to stream functions *)
 
-let lift : ('a, 'b) sf -> 'a stream -> 'b stream = (* lift *)
-  fun (SF (f,s)) -> 
-        fun (Str (Co (h, s1))) -> 
-          Str (Co (
-            (fun (s1, s) -> 
-              let (a, s1') = h s1 in 
-                let (b, s') = f s a in 
-                  (b, (s1', s')))
-            ,
-              (s1, s))
-          )
+(* type 'a stream = Str  *)
+
+type 'a stream = Str : ('s, 'a) st * 's -> 'a stream
+
+let lift : ('a, 'b) sf -> 'a stream -> 'b stream =
+fun (SF (f,s)) -> 
+      fun (Str (St h, s1)) -> 
+        Str ( St
+          (fun (s1, s) -> 
+            let (a, s1') = h s1 in 
+              let (b, s') = f s a in 
+                (b, (s1', s')))
+          ,
+            (s1, s))
 
 (* derived operators *)
 
@@ -57,9 +80,36 @@ let parallel : ('a,'b) sf -> ('c, 'd) sf -> ('a * 'c, 'b * 'd) sf =
 let fork : ('a, 'b) sf -> ('a, 'c) sf -> ('a, 'b * 'c) sf  = 
   fun f g -> arr dup >>> parallel f g
 
-let sf_of_stream : 'a stream -> ('b,'a) sf = 
-  fun s -> loop (arr (fun (_, s) -> (head s, tail s)))  s
+(* let sf_of_stream : 'a stream -> ('b,'a) sf = 
+  fun s -> loop (arr (fun (_, s) -> (head s, tail s)))  s *)
   
 (* Can we have operators directly defined on streams. Not efficient *)
 (* type ('a,'b) co_fun =  *)
     (* CF : {fx : 's. (('a, 's) co -> ('b, 's * 's2) co)} ->('a,'b) co_fun *)
+
+    module M = 
+struct
+
+(* Functor *)
+
+type ('s, 'a) st = 
+  St : ('s -> ('a * 's)) * 's -> ('s, 'a) st
+
+let map : ('a -> 'b) -> ('s, 'a) st -> ('s, 'b) st =
+    fun f (St (t,s)) ->
+    St ((fun s -> let (a,s') = t s in (f a, s')), s)
+  
+(* Monad *)
+(* structure de monoid sur les états *)
+
+let return : 's -> 'a -> ('s, 'a) st =
+  fun s a -> St ((fun s -> (a, s)), s)
+  
+let ( >>= ) : ('s -> 's -> 's) -> ('s, 'a) st -> ('a -> ('s, 'b) st) -> ('s, 'b) st = 
+  fun op (St (t,s)) f -> 
+    St ((fun s -> 
+          let (a, s') = t s in 
+            let St (t', s'') = f a in 
+            let (b,s''') = t' s' in (b, op s'' s''')), s)
+
+    end

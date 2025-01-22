@@ -8,6 +8,7 @@
 
 (** The type of concrete streams *)
 
+(* A coiterator is a state monad value and an initial state *)
 type ('a,'s) co = 
   | Co of ('s -> ('a * 's)) * 's 
 
