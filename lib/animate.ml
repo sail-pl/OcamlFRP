@@ -23,5 +23,5 @@ module Engine (E : Environment)=
     let run (f : (E.appinput, E.appoutput) sf) (d : float option) = 
         E.init ();
         let s = produce (fun () -> (E.input true,())) ()  in 
-          consume (apply f s) E.output d
+          consume (lift f s) E.output d
   end

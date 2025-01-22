@@ -5,8 +5,8 @@ open Stream
     consumes streams of type ['a] and produce streams of type ['b] *)
 type ('a,'b) sf
 
-(** [apply f s] applies the stream function [f] to the stream [s] *)
-val apply : ('a,'b) sf -> 'a stream -> 'b stream
+(** [lift f s] applies the stream function [f] to the stream [s] *)
+val lift : ('a,'b) sf -> 'a stream -> 'b stream
 
 (** The stream function [arr f] applies the function [f] to each element of a stream.*)
 val arr : 'a 'b. ('a -> 'b) -> ('a,'b) sf
