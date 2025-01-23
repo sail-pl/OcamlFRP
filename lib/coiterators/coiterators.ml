@@ -9,8 +9,7 @@
 (** The type of concrete streams *)
 
 (* A coiterator is a state monad value and an initial state *)
-type ('a,'s) co = 
-  | Co of ('s -> ('a * 's)) * 's 
+type ('a,'s) co = Co of ('s -> ('a * 's)) * 's 
 
 (* for testing purpose *)
 let from_list (l : 'a list) (a :'a) : ('a, 'a list) co =

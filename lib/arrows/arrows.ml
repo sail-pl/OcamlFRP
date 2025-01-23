@@ -34,7 +34,7 @@ let loop : ('a * 'c, 'b * 'c) sf -> 'c -> ('a, 'b) sf =
 
 (* now we can lift sf to stream functions *)
 
-let lift : ('a, 'b) sf -> 'a stream -> 'b stream = (* lift *)
+let lift : ('a, 'b) sf -> 'a stream -> 'b stream =
   fun (SF (f,s)) -> 
         fun (Str (Co (h, s1))) -> 
           Str (Co (
