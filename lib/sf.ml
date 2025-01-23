@@ -7,14 +7,16 @@ type ('a,'b) it =
   IT : ('s -> 'a -> ('b * 's)) * 's -> ('a,'b) it      
 
 let sf_of_it : ('a, 'b) it -> ('a, 'b) sf =
-  let rec aux f s = 
-    SF (fun a -> 
-      let (b, s') = f s a in (b, aux f s'))  
-    in fun (IT (f, s)) -> aux f s
-
+  fun (IT (f, s)) -> 
+    let rec aux f s = 
+      SF (fun a -> 
+        let (b, s') = f s a in (b, aux f s'))  
+    in aux f s
+  
 let it_of_sf : ('a,'b) sf -> ('a,'b) it = 
   fun f -> 
-    IT ((fun (SF g) -> g), f)
+    IT ((fun (SF g) -> g), 
+    f)
 
 let eval_it : ('a, 'b) it -> 'a stream -> 'b stream = 
   fun 
@@ -28,6 +30,14 @@ let eval_it : ('a, 'b) it -> 'a stream -> 'b stream =
             (b, (s1', s2'))),
             (s1, s2)
         ))
+
+(* let sf_of_it : ('a, 'b) it -> ('a, 'b) sf =
+  let rec aux f s = 
+    SF (fun a -> 
+      let (b, s') = f s a in (b, aux f s'))  
+    in fun (IT (f, s)) -> 
+      aux f s *)
+
 (*    
     let sf_of_it (type a b) : (a, b) it -> (a, b) sf =
       let rec aux f s = 
