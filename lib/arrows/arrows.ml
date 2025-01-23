@@ -2,64 +2,85 @@ open Coiterators
 open Utils
 open Stream   
 
-(* length preserving synchronous functions can be written using an iterator *)
-(* SF are length preserving functions, we define them as iterators *)
-(* We use the existential types of GADT to hide the state *)
+(* TODO *)
+(* use a record in sf type *)
+(* functions are themselves iterators, make it explicit *)
 
-(* SF A B = A -> (B, SF A B) *)
-
-(* pour les sf générés par les arrows on a une traduction vers nos sf *)
-(* celle ci est donnée ci dessous *)
-  
-(* Monad *)
-(* structure de monoid sur les états *)
-
+(** Arrow type representing length-preserving synchronous functions. *)
 type ('a, 'b) sf = 
   SF : ('s -> 'a -> 'b * 's) * 's -> ('a, 'b) sf
 
+(** Creates a pure arrow from a function.*)
 let arr : ('a -> 'b) -> ('a, 'b) sf = 
-  fun f -> SF ((fun () a -> (f a, ())), ())
+  fun (f : 'a -> 'b) ->
+    let step, state = (fun () (a : 'a) -> (f a, ())), () in
+      SF (step, state)
 
+(** Apply an arrow to the first component of a product *)
 let first : ('a, 'b) sf -> ('a * 'c, 'b * 'c) sf =
-  fun (SF (f, s)) ->
-    SF ((fun s (a, c) -> let (b, s') = f s a in ((b, c), s')), s)
+  let aux (step, state) = 
+    (
+      (fun state (a, c) -> 
+        let (b, state') = step state a in ((b, c), state')), 
+      state )
+  in 
+    fun (SF (step, state)) -> 
+      let (step, state) = aux (step, state) in SF (step, state)
 
+(** Arrow composition *)
 let (>>>) : ('a, 'b) sf -> ('b, 'c) sf -> ('a, 'c) sf =
-  fun (SF (f, s1)) (SF (g, s2)) ->
-    SF ((fun (s1, s2) a -> let (b, s1') = f s1 a in let (c, s2') = g s2 b in (c,(s1', s2'))), (s1, s2))
-  
+      let aux (step1, state1) (step2, state2) = 
+        (fun (state1, state2) a -> 
+          let (b, state1') = step1 state1 a in 
+            let (c, state2') = step2 state2 b in 
+              (c, (state1', state2'))), 
+        (state1, state2) in 
+    fun (SF (step1, state1)) 
+        (SF (step2, state2)) -> 
+      let (step, state) = aux (step1, state1) (step2, state2) in 
+        SF (step, state)
+            
+
 let loop : ('a * 'c, 'b * 'c) sf -> 'c -> ('a, 'b) sf =
-  fun (SF (f,s)) (c : 'c) ->
-    SF ((fun (s, c) a -> let ((b, c'), s') = f s (a, c) in (b, (s', c'))), (s, c))
-
-(* now we can lift sf to stream functions *)
-
+  let aux (step, state) c = 
+    (fun (state, c) a ->
+      let (b,c'), state' = step state (a, c) in  
+        (b, (state', c'))), (state, c) 
+    in fun (SF (step, state)) c ->
+      let (step, state) = aux (step, state) c in 
+        SF (step, state)
+        
+(** Lifts a synchronous function to operate on streams *)
 let lift : ('a, 'b) sf -> 'a stream -> 'b stream =
-  fun (SF (f,s)) -> 
-        fun (Str (Co (h, s1))) -> 
-          Str (Co (
-            (fun (s1, s) -> 
-              let (a, s1') = h s1 in 
-                let (b, s') = f s a in 
-                  (b, (s1', s')))
-            ,
-              (s1, s))
-          )
+    let aux (step1, state1) (step2, state2)  = 
+      (
+          (fun (state2, state1) -> 
+            let (a, state2') = step2 state2 in 
+              let (b, state1') = step1 state1 a in 
+                (b, (state2', state1'))), 
+          (state2, state1)) 
+    in 
+    fun (SF (step1, state1)) -> 
+      fun (Str (Co (step2, state2))) -> 
+        let (h',s') = aux (step1, state1) (step2, state2)  in Str (Co (h',s'))
 
-(* derived operators *)
+        
+(** Derived operators *)
 
+(** Apply arrow to second component of product while passing first component unchanged *)
 let second  : ('a, 'b) sf -> ('c * 'a, 'c * 'b) sf = 
   fun f -> arr swap >>> first f >>> arr swap
 
+(** Parallel composition of two arrows *)
 let parallel : ('a,'b) sf -> ('c, 'd) sf -> ('a * 'c, 'b * 'd) sf = 
   fun f g -> first f >>> second g 
 
+(** Fork input to two arrows and combine outputs *)
 let fork : ('a, 'b) sf -> ('a, 'c) sf -> ('a, 'b * 'c) sf  = 
   fun f g -> arr dup >>> parallel f g
 
+(** Convert stream to synchronous function *)
 let sf_of_stream : 'a stream -> ('b,'a) sf = 
-  fun s -> loop (arr (fun (_, s) -> (head s, tail s)))  s
-  
-(* Can we have operators directly defined on streams. Not efficient *)
-(* type ('a,'b) co_fun =  *)
-    (* CF : {fx : 's. (('a, 's) co -> ('b, 's * 's2) co)} ->('a,'b) co_fun *)
+  fun s -> 
+    loop (arr (fun (_, s) -> 
+              (head s, tail s))) s
