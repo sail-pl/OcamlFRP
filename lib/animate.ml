@@ -17,11 +17,13 @@ module type Environment =
     val output : appoutput -> bool  
   end 
 
+(* input is evaluated only once !!! No. *)
+
 (* runtime for executing a sf *)
 module Engine (E : Environment)= 
   struct
     let run (f : (E.appinput, E.appoutput) sf) (d : float option) = 
         E.init ();
-        let s = produce (fun () -> (E.input true,())) ()  in 
+        let s = produce (fun () -> (E.input false,())) ()  in 
           consume (lift f s) E.output d
   end

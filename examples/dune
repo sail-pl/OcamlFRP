@@ -12,3 +12,8 @@
  (public_name graphic)
  (name graphic)
  (libraries ocamlfrp fmt graphics unix))
+
+ (executable
+ (public_name balls)
+ (name balls)
+ (libraries ocamlfrp fmt graphics unix))
