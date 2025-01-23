@@ -35,16 +35,14 @@ let (>>>) : ('a, 'b) sf -> ('b, 'c) sf -> ('a, 'c) sf =
             let (c, state2') = step2 state2 b in 
               (c, (state1', state2'))), 
         (state1, state2) in 
-    fun (SF (step1, state1)) 
-        (SF (step2, state2)) -> 
+    fun (SF (step1, state1)) (SF (step2, state2)) -> 
       let (step, state) = aux (step1, state1) (step2, state2) in 
         SF (step, state)
             
-
 let loop : ('a * 'c, 'b * 'c) sf -> 'c -> ('a, 'b) sf =
   let aux (step, state) c = 
     (fun (state, c) a ->
-      let (b,c'), state' = step state (a, c) in  
+      let (b, c'), state' = step state (a, c) in  
         (b, (state', c'))), (state, c) 
     in fun (SF (step, state)) c ->
       let (step, state) = aux (step, state) c in 
