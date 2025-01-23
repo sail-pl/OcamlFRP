@@ -1,11 +1,14 @@
 open Stream
 
+(** Synchronous function type *)
 type ('a,'b) sf = 
   SF : ('a -> ('b * ('a,'b) sf)) -> ('a,'b) sf
 
+(** Iterator type *)
 type ('a,'b) it =
   IT : ('s -> 'a -> ('b * 's)) * 's -> ('a,'b) it      
 
+(** Convert an iterator to a synchronous function *)
 let sf_of_it : ('a, 'b) it -> ('a, 'b) sf =
   fun (IT (f, s)) -> 
     let rec aux f s = 
@@ -13,11 +16,13 @@ let sf_of_it : ('a, 'b) it -> ('a, 'b) sf =
         let (b, s') = f s a in (b, aux f s'))  
     in aux f s
   
+(** Convert a synchronous function to an iterator *)
 let it_of_sf : ('a,'b) sf -> ('a,'b) it = 
   fun f -> 
     IT ((fun (SF g) -> g), 
     f)
 
+(** Evaluate an iterator on an input stream to produce an output stream *)
 let eval_it : ('a, 'b) it -> 'a stream -> 'b stream = 
   fun 
     (IT (f, s1)) 
@@ -30,6 +35,31 @@ let eval_it : ('a, 'b) it -> 'a stream -> 'b stream =
             (b, (s1', s2'))),
             (s1, s2)
         ))
+
+(* 
+(* Synchronous function type*)
+type ('a,'b) sf = 
+  SF : ('a -> ('b * ('a,'b) sf)) -> ('a,'b) sf
+
+(** Iterator type *)
+type ('a, 'b) it =
+  | IT : {
+      step: 's -> 'a -> ('b * 's);
+      state: 's
+    } -> ('a, 'b) it
+
+let sf_of_it : ('a, 'b) it -> ('a, 'b) sf =
+  fun (IT {step; state}) -> 
+    let rec aux f s = 
+      SF (fun a -> 
+        let (b, s') = f s a in (b, aux f s'))  
+    in aux step state
+      
+    (** Convert a synchronous function to an iterator *)
+let it_of_sf : ('a,'b) sf -> ('a,'b) it = 
+  fun state -> 
+    let step (SF g) =  g in IT {step; state} *)
+
 
 (* let sf_of_it : ('a, 'b) it -> ('a, 'b) sf =
   let rec aux f s = 

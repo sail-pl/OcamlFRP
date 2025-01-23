@@ -12,7 +12,7 @@ type ('a, 'b) sf =
 
 (** Creates a pure arrow from a function.*)
 let arr : ('a -> 'b) -> ('a, 'b) sf = 
-  fun (f : 'a -> 'b) ->
+  fun f ->
     let step, state = (fun () (a : 'a) -> (f a, ())), () in
       SF (step, state)
 
