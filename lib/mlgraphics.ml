@@ -20,14 +20,14 @@ type output = (unit -> unit) list
 
 let fetch () = 
   let s = wait_next_event 
-    [Button_down; Button_up; Key_pressed; Mouse_motion] in
+    [Button_down; Button_up; Key_pressed; Mouse_motion;Poll] in
   {
     window_size_x = size_x ();
     window_size_y = size_y ();
     mouse_pos_x = s.mouse_x;
     mouse_pos_y = s.mouse_y;
     mouse_button = s.button;
-    key = if s.keypressed then Some s.key else None
+    key = if s.keypressed then Some (read_key ()) else None
   }
 
 module Graph : Environment with 
