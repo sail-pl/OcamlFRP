@@ -11,10 +11,10 @@ type ('a,'b) it =
 (** Convert an iterator to a synchronous function *)
 let sf_of_it : ('a, 'b) it -> ('a, 'b) sf =
   fun (IT (f, s)) -> 
-    let rec aux f s = 
+    let rec aux s = 
       SF (fun a -> 
-        let (b, s') = f s a in (b, aux f s'))  
-    in aux f s
+        let (b, s') = f s a in (b, aux s'))  
+    in aux s
   
 (** Convert a synchronous function to an iterator *)
 let it_of_sf : ('a,'b) sf -> ('a,'b) it = 
