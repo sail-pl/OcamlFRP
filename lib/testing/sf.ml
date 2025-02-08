@@ -26,15 +26,15 @@ let it_of_sf : ('a,'b) sf -> ('a,'b) it =
 let eval_it : ('a, 'b) it -> 'a stream -> 'b stream = 
   fun 
     (IT (f, s1)) 
-    (Str (Co (h, s2))) ->
-      Str (Co 
+    (Str (h, s2)) ->
+      Str 
         (
           (fun (s1,s2) -> 
             let (a, s2') = h s2 in 
             let (b, s1') = f s1 a in 
             (b, (s1', s2'))),
             (s1, s2)
-        ))
+        )
 
 (* 
 (* Synchronous function type*)
