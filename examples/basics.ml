@@ -1,8 +1,18 @@
+(*************************************************************************)
+(*                                                                       *)
+(*                                OCamlFRP                               *)
+(*                                                                       *)
+(* Copyright (C) 2025  Frédéric Dabrowski                                *)
+(* All rights reserved.  This file is distributed under the terms of      *)
+(* the GNU Lesser General Public License version 3.                      *)
+(* You should have received a copy of the GNU General Public License     *)
+(* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
+(*************************************************************************)
+
 open Format
 open Fmt
 open Ocamlfrp.Stream
 open Ocamlfrp.Arrows
-open Ocamlfrp.References
 
 (* STREAMS *)
 
@@ -37,33 +47,13 @@ let sum : (int, int) sf =
   let open Ocamlfrp.Utils in 
   loop (arr (dup << uncurry ( + ))) 0 
   
-(* STREAM FUNCTIONS WITH REFERENCES *)
 
-let counter_with_ref  : ('a, int) sf = 
-  let open Ocamlfrp.Utils in 
-  let r = mkref 0 in 
-    get r >>> arr ((mapright (( + ) 1)) << dup << snd) >>> set r
-
-let pref_with_ref : 'a -> ('a,'a) sf = 
-  fun v -> 
-    let r = mkref v in get r >>> (arr Ocamlfrp.Utils.swap) >>> set r
-    
-let sum_with_ref : (int, int) sf =
-  let open Ocamlfrp.Utils in 
-  let r = mkref 0 in 
-    get r >>> arr (dup << uncurry (+)) >>> set r
-
-
-    
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "positives:") (list_of_stream (lift identity positives) 10) 
 let _ = Ocamlfrp.Utils.show (pair pp_print_int pp_print_int) (Some "plust_left:")  (list_of_stream (lift plus_left positives) 10)
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "squares positives:") (list_of_stream (lift squares positives) 10)
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "counter:") (list_of_stream (lift counter dummy) 10)
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "pre positives:") (list_of_stream (lift (pre 0) positives) 10)
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "sum positives:")(list_of_stream (lift sum positives) 10)
-let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "counter with ref:")(list_of_stream (lift counter_with_ref dummy) 10)
-let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "pre with ref:")(list_of_stream (lift (pref_with_ref 0) positives) 10)
-let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "sum with ref:")(list_of_stream (lift sum_with_ref positives) 10)
 let _ = Format.fprintf std_formatter "done.\n" 
 let _ =   print_newline ();
 

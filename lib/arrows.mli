@@ -3,7 +3,7 @@
 (*                                OCamlFRP                               *)
 (*                                                                       *)
 (* Copyright (C) 2025  Frédéric Dabrowski                                *)
-(* All rights reserved.  This file is distributed under the terms of     *)
+(* All rights reserved.  This file is distributed under the terms of      *)
 (* the GNU Lesser General Public License version 3.                      *)
 (* You should have received a copy of the GNU General Public License     *)
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
@@ -55,14 +55,9 @@ val loop : ('a * 'x, 'b * 'x) sf -> 'x -> ('a, 'b) sf
 (** Iterate for synchronous functions *)
 val lift : ('a,'b) sf -> 'a stream -> 'b stream
 
-
-(*
-    arr (id) >>> a = a
-    a >>> arr (id) = a
-    a >>> (b >>> c) = (a >>> b) >>> c 
-    arr (g o f) = arr f >>> arr g
-    first (a) >>> arr (pi1) = arr (pi1) >>> a
-    first a >>> arr (id * f) = arr (id * f) >>> first a
-    first a >>> arr f = arr f >>> first (first a)
-    first (arr f) = arr (f * id)
-    first (a >>> b) = first a >>> first b *)
+module Arr : sig
+    val id : ('a, 'a) sf
+    val const : 'b -> ('a, 'b) sf
+    val dup : ('a, 'a * 'a) sf
+    val delay : 'a -> ('a, 'a) sf
+end

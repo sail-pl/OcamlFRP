@@ -1,3 +1,0 @@
-(test
- (libraries ocamlfrp fmt)
- (name test_ocamlfrp))

@@ -1,3 +1,14 @@
+(*************************************************************************)
+(*                                                                       *)
+(*                                OCamlFRP                               *)
+(*                                                                       *)
+(* Copyright (C) 2025  Frédéric Dabrowski                                *)
+(* All rights reserved.  This file is distributed under the terms of      *)
+(* the GNU Lesser General Public License version 3.                      *)
+(* You should have received a copy of the GNU General Public License     *)
+(* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
+(*************************************************************************)
+
 open Graphics
 open Ocamlfrp.Arrows
 open Ocamlfrp.Frpgraphics
@@ -15,8 +26,6 @@ type ball = {
   color : color;
   velocity : float;
 }
-let render_ball (b : ball) : renderObject = 
-  {draw = fun () -> set_color b.color; fill_circle b.x b.y b.radius}
 
 let mk_graphic : 'a 'b 's.
   ('a * 's, 'b * 's) sf -> 

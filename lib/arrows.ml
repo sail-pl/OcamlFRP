@@ -3,7 +3,7 @@
 (*                                OCamlFRP                               *)
 (*                                                                       *)
 (* Copyright (C) 2025  Frédéric Dabrowski                                *)
-(* All rights reserved.  This file is distributed under the terms of     *)
+(* All rights reserved.  This file is distributed under the terms of      *)
 (* the GNU Lesser General Public License version 3.                      *)
 (* You should have received a copy of the GNU General Public License     *)
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
@@ -132,3 +132,20 @@ let lift : ('a, 'b) sf -> 'a stream -> 'b stream =
           let (b, state1') = t1 state1 a in 
             (b, (state2', state1'))
       in Str (t, (s2, s1))
+
+module Arr = struct 
+
+  let id : ('a, 'a) sf = 
+    let t = fun s a -> (a, s) in SF (t, ())
+  
+  let const : 'b -> ('a, 'b) sf = 
+    fun b -> 
+      let t = fun s _ -> (b, s) in SF (t, ())
+  
+  let dup : ('a, 'a * 'a) sf = 
+    let t = fun s a -> ((a, a), s) in SF (t, ())
+
+  let delay : 'a -> ('a, 'a) sf = 
+    fun a -> loop (arr Utils.swap) a
+
+end

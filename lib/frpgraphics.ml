@@ -1,32 +1,24 @@
+(*************************************************************************)
+(*                                                                       *)
+(*                                OCamlFRP                               *)
+(*                                                                       *)
+(* Copyright (C) 2025  Frédéric Dabrowski                                *)
+(* All rights reserved.  This file is distributed under the terms of      *)
+(* the GNU Lesser General Public License version 3.                      *)
+(* You should have received a copy of the GNU General Public License     *)
+(* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
+(*************************************************************************)
+
 open Graphics
 
 open Arrows
-open Animate
-
-(** Add size_x, size_y to status *)
-(* make values for outputs *)
-
-type pos = {
-  x : int;
-  y : int
-}
+open FrpEngine
 
 type renderObject = {draw : unit -> unit }
 
 let mk_renderObject f = {draw = f}
 
 type scene = renderObject list
-
-(* let circle : ((pos * int * color), renderObject) sf = 
-  let f = 
-    fun (center, radius, c) -> 
-      {
-        p = center;
-        draw = fun () -> 
-          set_color c; 
-          fill_circle center.x center.y radius
-      }
-  in arr f *)
 
 type input = {
   window_size_x : int;
@@ -38,7 +30,6 @@ type input = {
 }
 
 type output = scene
-
 
 let fetch () = 
   let s = wait_next_event 

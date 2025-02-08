@@ -4,21 +4,11 @@
  (libraries ocamlfrp fmt))
 
 (executable
- (public_name stdin)
- (name stdin)
- (libraries ocamlfrp fmt))
-
-(executable
- (public_name graphic)
- (name graphic)
- (libraries ocamlfrp fmt graphics unix))
-
- (executable
- (public_name balls)
- (name balls)
- (libraries ocamlfrp fmt graphics unix))
-
- (executable
  (public_name boucingball)
  (name bouncingball)
+ (libraries ocamlfrp fmt graphics unix))
+
+ (executable
+ (public_name collide)
+ (name collide)
  (libraries ocamlfrp fmt graphics unix))
