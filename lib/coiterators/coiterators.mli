@@ -1,9 +1,8 @@
 type ('a,'s) co = 
   | Co of ('s -> ('a * 's)) * 's 
 
-val from_list : 'a list -> 'a -> ('a, 'a list) co
 
-val to_list :  ('a,'s) co -> int -> 'a list
+val co_step : ('a, 's) co -> 'a * ('a, 's) co
     
 val co_const : 't -> ('t, 's option) co  
 
@@ -23,6 +22,10 @@ val co_apply : (('a -> 's2 option -> ('b * 's2 option)), 'sf) co ->
 val co_lambda : (('a, 's1 option) co -> ('b, 's2) co) ->
   (('a -> 's2 option -> 'b * 's2 option), 'sf option) co
 
+
+val from_list : 'a list -> 'a -> ('a, 'a list) co
+
+val to_list :  ('a,'s) co -> int -> 'a list
 (* build from a iterator ... *)
 
 (* co_apply (co_lambda (co_apply f)) = co_apply f *)

@@ -1,26 +1,15 @@
-(** Coiteration 
-    coiteration makes it possible to get rid of recursion.
-    As a consequence, streams cannot be defined recursively as in
-      constant v = cons v (constant v)
-    Despite  the pre functions looks like cons, we cannot define
-    constant this way because pre changes the type of the state.    
-*)
+(** * Coiteration *)
 
-(** The type of concrete streams *)
 
-(* A coiterator is a state monad value and an initial state *)
+(** The type of coiterator is a state monad value and an initial state. *)
 type ('a,'s) co = Co of ('s -> ('a * 's)) * 's 
-
-(* for testing purpose *)
-let from_list (l : 'a list) (a :'a) : ('a, 'a list) co =
-    Co ((fun l -> match l with [] -> (a,l) | h::t -> (h, t)), l)
-  
-let rec to_list (Co (f,i) : ('a,'b) co) (n : int) = 
-  if n > 0 then 
-    let (a, s') = f i in 
-      a::(to_list (Co (f, s')) (n-1))
-  else []
     
+(* coalgebra structure *)
+let co_step : ('a, 's) co -> 'a * ('a, 's) co = 
+  fun (Co (f, s)) -> 
+    let (v, s') = f s in
+      (v, Co (f, s'))
+
 let co_apply : 
   (('t1 -> 's2 option -> ('t2 * 's2 option), 'sf) co) -> 
   ('t1, 's1) co -> ('t2, ('s2 option * 'sf * 's1)) co =
@@ -74,5 +63,16 @@ let co_lambda : (('a, 's1 option) co -> ('b, 's2) co) ->
      let s1 = (match s with None -> i | Some s2 -> s2) in
      let (v', s') = t s1 in
         (v', Some s'))
+
+
+        (* for testing purpose *)
+let from_list (l : 'a list) (a :'a) : ('a, 'a list) co =
+  Co ((fun l -> match l with [] -> (a,l) | h::t -> (h, t)), l)
+
+let rec to_list (Co (f,i) : ('a,'b) co) (n : int) = 
+if n > 0 then 
+  let (a, s') = f i in 
+    a::(to_list (Co (f, s')) (n-1))
+else []
 
 (* co_apply (co_lambda (co_apply f)) = co_apply f *)
