@@ -51,3 +51,5 @@ let rec consume : 'a stream -> ('a -> bool) -> float option -> unit =
       if b then 
         consume (Str ((Co (h,s')))) f d
       else ()   
+
+      (* Str : ('a, 's) co -> 'a stream *)

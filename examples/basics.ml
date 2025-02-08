@@ -53,6 +53,8 @@ let sum_with_ref : (int, int) sf =
   let r = mkref 0 in 
     get r >>> arr (dup << uncurry (+)) >>> set r
 
+
+    
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "positives:") (list_of_stream (lift identity positives) 10) 
 let _ = Ocamlfrp.Utils.show (pair pp_print_int pp_print_int) (Some "plust_left:")  (list_of_stream (lift plus_left positives) 10)
 let _ = Ocamlfrp.Utils.show (pp_print_int) (Some "squares positives:") (list_of_stream (lift squares positives) 10)
