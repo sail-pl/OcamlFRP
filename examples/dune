@@ -12,3 +12,8 @@
  (public_name collide)
  (name collide)
  (libraries ocamlfrp fmt graphics unix))
+
+ (executable
+ (public_name testref)
+ (name testref)
+ (libraries ocamlfrp fmt graphics unix))
