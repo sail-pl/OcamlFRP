@@ -4,7 +4,7 @@
  (libraries ocamlfrp fmt))
 
 (executable
- (public_name boucingball)
+ (public_name bouncingball)
  (name bouncingball)
  (libraries ocamlfrp fmt graphics unix))
 

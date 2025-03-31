@@ -13,7 +13,6 @@ open Graphics
 open Ocamlfrp.Arrows
 open Ocamlfrp.Frpgraphics
 
-
 let gravity = 0.5;; (* Accélération due à la gravité *)
 let elasticity = 0.8;; 
 
