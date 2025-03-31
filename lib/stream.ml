@@ -1,74 +1,98 @@
-
 (*************************************************************************)
 (*                                                                       *)
 (*                                OCamlFRP                               *)
 (*                                                                       *)
 (* Copyright (C) 2025  Frédéric Dabrowski                                *)
-(* All rights reserved.  This file is distributed under the terms of      *)
+(* Copyright (c) 2025 Nicolas Paul                                       *)
+(*                                                                       *)
+(* All rights reserved.  This file is distributed under the terms of     *)
 (* the GNU Lesser General Public License version 3.                      *)
 (* You should have received a copy of the GNU General Public License     *)
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
 (*************************************************************************)
 
-type 'a stream = 
-  | Str : ('state -> ('a * 'state)) * 'state -> 'a stream
+type 'a stream = Str : ('state -> 'a * 'state) * 'state -> 'a stream
 
-let destr : 'a stream -> 'a * 'a stream = 
-    fun (Str (f,s)) ->
-      let (a,s') = f s in (a, Str (f,s'))
+let destr (s : 'a stream) : 'a * 'a stream =
+  let (Str (gen, init)) = s in
+  let value, next = gen init in
+  value, Str (gen, next)
+;;
 
-let head : 'a stream -> 'a =
-  fun s -> fst (destr s) 
+let head (s : 'a stream) : 'a = fst (destr s)
+let tail (s : 'a stream) : 'a stream = snd (destr s)
 
-let tail : 'a stream -> 'a stream =
-  fun s -> snd (destr s)
-  
-let map : 'a 'b. ('a -> 'b) -> 'a stream -> 'b stream = 
-  fun f (Str (h,s)) -> 
-    Str ((fun s -> let (a,s') = h s in (f a, s')), s)
+let map (f : 'a -> 'b) (s : 'a stream) : 'b stream =
+  let (Str (gen, init)) = s in
+  let new_gen state =
+    let head, next = gen state in
+    f head, next
+  in
+  Str (new_gen, init)
+;;
 
-let apply : 'a 'b. ('a -> 'b) stream -> 'a stream -> 'b stream =
-  fun (Str (f, i)) (Str (e, ie)) ->
-    Str ((fun (sf,se) -> 
-      let (vf,sf') = f sf in
-      let (ve,se') = e se in
-        ((vf ve), (sf', se'))),
-        (i,ie))
-  
+let apply (fs : ('a -> 'b) stream) (vs : 'a stream) : 'b stream =
+  let (Str (fs_gen, fs_init)) = fs in
+  let (Str (vs_gen, vs_init)) = vs in
+  let new_gen =
+    fun (fn_state, val_state) ->
+    let f, fs_next = fs_gen fn_state in
+    let v, vs_next = vs_gen val_state in
+    f v, (fs_next, vs_next)
+  in
+  let new_init = fs_init, vs_init in
+  Str (new_gen, new_init)
+;;
 
-let produce : 'a 's. ('s -> 'a * 's) -> 's -> 'a stream = 
-  fun h s -> Str (h,s) 
+let produce (f : 's -> 'a * 's) (state : 's) : 'a stream = Str (f, state)
 
-let coiterate : 'a. ('a -> 'a) -> 'a -> 'a stream = 
-  fun f x0 -> produce (fun x -> let y = f x in (x,y)) x0
+let coiterate (f : 'a -> 'a) (init : 'a) : 'a stream =
+  let gen state =
+    let next = f state in
+    state, next
+  in
+  produce gen init
+;;
 
-let constant : 'a. 'a -> 'a stream =
-  fun x -> coiterate (Fun.const x) x
-  
-let rec perform : 'a stream -> ('a -> unit) -> int -> unit = 
-  fun s f n ->
-    if n <= 0 then ()
-    else 
-      let (Str (h,s)) =  s in 
-      let (a,s') = h s in f a; 
-        perform (Str (h,s')) f (n-1)
+let constant (x : 'a) : 'a stream = coiterate (Fun.const x) x
 
-let rec consume : 'a stream -> ('a -> bool) -> float option -> unit = 
-  fun s f d ->
-    let (Str (h,s)) =  s in 
-    let (a,s') = h s in 
-    let b = f a in
-      (* print_string "a\n"; flush stdout; *)
-      match d with None -> () | Some t -> Thread.delay t;
-      if b then 
-        consume (Str (h,s')) f d
-      else ()   
+let rec perform (s : 'a stream) (f : 'a -> unit) (n : int) : unit =
+  if n <= 0
+  then ()
+  else (
+    let (Str (gen, init)) = s in
+    let value, next = gen init in
+    (* TODO(nico): does it assumes f will have side effects? if so, should be documented! *)
+    f value;
+    perform (Str (gen, next)) f (n - 1))
+;;
 
-let stream_of_list (l : 'a list) (a :'a) : 'a stream =
-  Str ((fun l -> match l with [] -> (a,l) | h::t -> (h, t)), l)
-      
-let rec list_of_stream (Str (f,i) : 'a stream) (n : int) = 
-  if n > 0 then 
-    let (a, s') = f i in 
-      a::(list_of_stream (Str (f, s')) (n-1))
+let rec consume (s : 'a stream) (predicate : 'a -> bool) (delay : float option) : unit =
+  let (Str (gen, init)) = s in
+  let value, next = gen init in
+  let bool = predicate value in
+  (* TODO(nico): not sure about the pattern matching on the delay here, shouldn't we still
+     consume s later even tho no delay is provided? *)
+  match delay with
+  | None -> ()
+  | Some t ->
+    Thread.delay t;
+    if bool then consume (Str (gen, next)) predicate delay
+;;
+
+let stream_of_list (l : 'a list) (a : 'a) : 'a stream =
+  let gen = function
+    | [] -> a, []
+    | h :: t -> h, t
+  in
+  Str (gen, l)
+;;
+
+let rec list_of_stream (s : 'a stream) (n : int) =
+  let (Str (gen, init)) = s in
+  if n >= 0
+  then (
+    let value, next = gen init in
+    value :: list_of_stream (Str (gen, next)) (n - 1))
   else []
+;;
