@@ -1,74 +1,78 @@
-
-(*************************************************************************)
-(*                                                                       *)
-(*                                OCamlFRP                               *)
-(*                                                                       *)
-(* Copyright (C) 2025  Frédéric Dabrowski                                *)
+(**************************************************************************)
+(*                                                                        *)
+(*                                OCamlFRP                                *)
+(*                                                                        *)
+(* Copyright (C) 2025  Frédéric Dabrowski                                 *)
+(* Copyright (C) 2025  Nicolas Paul                                       *)
 (* All rights reserved.  This file is distributed under the terms of      *)
-(* the GNU Lesser General Public License version 3.                      *)
-(* You should have received a copy of the GNU General Public License     *)
-(* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
-(*************************************************************************)
+(* the GNU Lesser General Public License version 3.                       *)
+(* You should have received a copy of the GNU General Public License      *)
+(* along with this program.  If not, see <https://www.gnu.org/licenses/>. *)
+(**************************************************************************)
 
 type 'a stream = 
-  | Str : ('state -> ('a * 'state)) * 'state -> 'a stream
+  | Stream : ('s -> ('a * 's)) * 's -> 'a stream
 
-let destr : 'a stream -> 'a * 'a stream = 
-    fun (Str (f,s)) ->
-      let (a,s') = f s in (a, Str (f,s'))
+let destr (Stream (f, s)) =
+  let x, s' = f s in
+  x, Stream (f, s')
 
-let head : 'a stream -> 'a =
-  fun s -> fst (destr s) 
+let head stream = fst (destr stream)
 
-let tail : 'a stream -> 'a stream =
-  fun s -> snd (destr s)
+let tail stream = snd (destr stream)
   
-let map : 'a 'b. ('a -> 'b) -> 'a stream -> 'b stream = 
-  fun f (Str (h,s)) -> 
-    Str ((fun s -> let (a,s') = h s in (f a, s')), s)
+let map f (Stream (t, q)) =
+  Stream (
+    (fun s ->
+      let x, s' = t s in
+      f x, s'),
+    q)
 
-let apply : 'a 'b. ('a -> 'b) stream -> 'a stream -> 'b stream =
-  fun (Str (f, i)) (Str (e, ie)) ->
-    Str ((fun (sf,se) -> 
-      let (vf,sf') = f sf in
-      let (ve,se') = e se in
-        ((vf ve), (sf', se'))),
-        (i,ie))
+let apply (Stream (f, sf)) (Stream (g, sg)) =
+  Stream (
+    (fun (s1, s2) ->
+      let x, s1' = f s1 in
+      let y, s2' = g s2 in
+      (x y), (s1', s2')),
+    (sf, sg))
+
+let produce f s = Stream (f, s) 
+
+let coiterate f x0 = produce (fun x -> x, f x) x0
+
+let constant x = coiterate (Fun.const x) x
   
+let rec perform (Stream (g, s)) f n =
+  if n <= 0 then
+    ()
+  else
+    let x, s' = g s in
+    f x ;
+    perform (Stream (g, s')) f (n - 1)
 
-let produce : 'a 's. ('s -> 'a * 's) -> 's -> 'a stream = 
-  fun h s -> Str (h,s) 
+let rec consume (Stream (f, s)) p d =
+  let x, s' = f s in
+  match d with
+  | None -> ()
+  | Some timer ->
+    Thread.delay timer ;
+    if p x then (* TODO(nico): can p have side-effects? *)
+      consume (Stream (f, s')) p d
+    else
+      ()
 
-let coiterate : 'a. ('a -> 'a) -> 'a -> 'a stream = 
-  fun f x0 -> produce (fun x -> let y = f x in (x,y)) x0
+let stream_of_list l x =
+  let f =
+    function
+    | [] as l -> x, l
+    | h :: t -> h, t
+  in
+  Stream (f, l)
 
-let constant : 'a. 'a -> 'a stream =
-  fun x -> coiterate (Fun.const x) x
-  
-let rec perform : 'a stream -> ('a -> unit) -> int -> unit = 
-  fun s f n ->
-    if n <= 0 then ()
-    else 
-      let (Str (h,s)) =  s in 
-      let (a,s') = h s in f a; 
-        perform (Str (h,s')) f (n-1)
-
-let rec consume : 'a stream -> ('a -> bool) -> float option -> unit = 
-  fun s f d ->
-    let (Str (h,s)) =  s in 
-    let (a,s') = h s in 
-    let b = f a in
-      (* print_string "a\n"; flush stdout; *)
-      match d with None -> () | Some t -> Thread.delay t;
-      if b then 
-        consume (Str (h,s')) f d
-      else ()   
-
-let stream_of_list (l : 'a list) (a :'a) : 'a stream =
-  Str ((fun l -> match l with [] -> (a,l) | h::t -> (h, t)), l)
-      
-let rec list_of_stream (Str (f,i) : 'a stream) (n : int) = 
-  if n > 0 then 
-    let (a, s') = f i in 
-      a::(list_of_stream (Str (f, s')) (n-1))
-  else []
+let rec list_of_stream (Stream (f, s)) n =
+  if n > 0 then
+    let x, s' = f s in
+    x :: (list_of_stream (Stream (f, s')) (n - 1))
+    (* TODO(nico): Make it totally recursive to obtain TCO? *)
+  else
+    []

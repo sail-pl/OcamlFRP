@@ -126,12 +126,12 @@ let loop : ('a * 'c, 'b * 'c) sf -> 'c -> ('a, 'b) sf =
 
 let lift : ('a, 'b) sf -> 'a stream -> 'b stream =
   fun (SF (t1, s1)) -> 
-    fun (Str (t2, s2)) -> 
+    fun (Stream (t2, s2)) -> 
       let t = fun (state2, state1) -> 
         let (a, state2') = t2 state2 in 
           let (b, state1') = t1 state1 a in 
             (b, (state2', state1'))
-      in Str (t, (s2, s1))
+      in Stream (t, (s2, s1))
 
 module Arr = struct 
 
