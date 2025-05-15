@@ -11,4 +11,9 @@
 (executable
  (public_name collide)
  (name collide)
- (libraries ocamlfrp fmt graphics unix))
+ (libraries ocamlfrp graphics unix))
+
+(executable
+ (public_name guess)
+ (name guess)
+ (libraries ocamlfrp))
