@@ -1,13 +1,14 @@
-(*****************************************************************************)
-(*                                                                           *)
-(*                                  OCamlFRP                                 *)(*                                                                           *)
-(* Copyright (C) 2025 Frédéric Dabrowski                                     *)
-(* Copyright (C) 2025 Nicolas Paul                                           *)
-(* All rights reserved.  This file is distributed under the terms of         *)
-(* the GNU Lesser General Public License version 3.                          *)
-(* You should have received a copy of the GNU General Public License         *)
-(* along with this program.  If not, see <https://www.gnu.org/licenses/>.    *)
-(*****************************************************************************)
+(******************************************************************************)
+(*                                                                            *)
+(*                                  OCamlFRP                                  *)
+(*                                                                            *)
+(* Copyright (C) 2025 Frédéric Dabrowski                                      *)
+(* Copyright (C) 2025 Nicolas Paul                                            *)
+(* All rights reserved.  This file is distributed under the terms of          *)
+(* the GNU Lesser General Public License version 3.                           *)
+(* You should have received a copy of the GNU General Public License          *)
+(* along with this program.  If not, see <https://www.gnu.org/licenses/>.     *)
+(******************************************************************************)
 
 open Stream
 
@@ -65,7 +66,6 @@ val fanin : ('a, 'b) sf -> ('c, 'b) sf -> (('a, 'c) Either.t, 'b) sf
     previous state, starting with state [x0]. *)
 val loop : ('a * 'x, 'b * 'x) sf -> 'x -> ('a, 'b) sf
 
-(** Iterate for synchronous functions *)
 (** [lift f s] is the stream produced by applying synchronous function
     [f] to stream [s]. *)
 val lift : ('a,'b) sf -> 'a stream -> 'b stream

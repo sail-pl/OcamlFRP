@@ -17,3 +17,8 @@
  (public_name guess)
  (name guess)
  (libraries ocamlfrp))
+
+(executable
+ (public_name snake)
+ (name snake)
+ (libraries ocamlfrp graphics))
