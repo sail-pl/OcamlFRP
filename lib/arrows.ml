@@ -88,4 +88,6 @@ let const x = arr (Fun.const x)
 
 let dup = SF ((fun s x -> (x, x), s), ())
 
-let delay t = loop (arr Utils.swap) t
+let swap = SF ((fun () (x, y) -> (y, x), ()), ())
+
+let delay t = loop swap t

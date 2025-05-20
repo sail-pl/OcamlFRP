@@ -84,6 +84,10 @@ val const : 'b -> ('a, 'b) sf
     of its arguments. *)
 val dup : ('a, 'a * 'a) sf
 
+(** [swap] is the synchronous function that swaps the position of two values
+    next to each other. *)
+val swap : ('a * 'b, 'b * 'a) sf
+
 (** [delay t] is the synchronous function which retards a streamed value by
     one step, starting with [t]. *)
 val delay : 'a -> ('a, 'a) sf
