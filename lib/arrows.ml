@@ -34,8 +34,8 @@ let ( >>> ) (SF (f, sf)) (SF (g, sg)) =
   in create h (sf, sg)
 
 let first (SF (f, s)) = create (fun s (x, z) -> let y, s' = f s x in (y, z), s') s
-    
-let second (SF (f, s)) = create (fun s (z, x) -> let y, s' = f s x in (z, y), s') s
+
+let second f = swap >>> first f >>> swap
 
 let parallel (SF (f, sf)) (SF (g, sg))  = 
   let h (s1, s2) (x, y) =  
