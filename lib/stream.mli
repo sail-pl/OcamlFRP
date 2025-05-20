@@ -35,10 +35,6 @@ val map : ('a -> 'b) -> 'a stream -> 'b stream
     to values of stream [s]. *)
 val apply : ('a -> 'b) stream -> 'a stream -> 'b stream
   
-(** [produce f s] is the stream with transition function [f]
-    and initial state [s]*)
-val produce : ('a -> 'b * 'a) -> 'a -> 'b stream
-
 (* TODO(nico): ask F. Dabrowski about this, we may want to add a fold function 
 (** [fold f x] generates a stream by iteratively applying the function [f] 
     to the current value, starting with [x]. s*)

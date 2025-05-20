@@ -18,10 +18,6 @@ open Stream
 type ('a, 'b) sf =
   | SF : ('s -> 'a -> 'b * 's) * 's -> ('a, 'b) sf
 
-(** [create f s] is the synchronous function composed of function [f] and
-    initial state [s] *)
-val create : ('s -> 'a -> 'b * 's) -> 's -> ('a, 'b) sf
-
 (** [arr f] is the synchronous function constructed from function [f]. *)
 val arr : ('a -> 'b) -> ('a,'b) sf
 

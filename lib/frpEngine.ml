@@ -30,6 +30,6 @@ module Engine (E : Environment)=
   struct
     let run f d =
       E.init () ;
-      let s = produce (fun () -> E.input false, ()) () in
+      let s = Stream ((fun () -> E.input false, ()), ()) in
       consume (lift f s) E.output d
   end

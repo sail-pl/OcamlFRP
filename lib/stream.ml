@@ -12,17 +12,15 @@
 
 type 'a stream = Stream : ('s -> ('a * 's)) * 's -> 'a stream
 
-let produce f s = Stream (f, s) 
+let coiterate f x0 = Stream ((fun x -> x, f x), x0)
 
-let coiterate f x0 = produce (fun x -> x, f x) x0
-
-let destr (Stream (f, s)) = let x, s' = f s in x, produce f s'
+let destr (Stream (f, s)) = let x, s' = f s in x, Stream (f, s')
 
 let head stream = fst (destr stream)
 
 let tail stream = snd (destr stream)
   
-let map f (Stream (t, q)) = produce (fun s -> let x, s' = t s in f x, s') q
+let map f (Stream (t, q)) = Stream ((fun s -> let x, s' = t s in f x, s'), q)
 
 let apply (Stream (f, sf)) (Stream (g, sg)) =
   let h (s1, s2) =
@@ -30,7 +28,7 @@ let apply (Stream (f, sf)) (Stream (g, sg)) =
     let y, s2' = g s2 in
     (x y), (s1', s2')
   in
-  produce h (sf, sg)
+  Stream (h, (sf, sg))
 
 let constant x = coiterate (Fun.const x) x
   
@@ -39,7 +37,7 @@ let rec perform (Stream (g, s)) f n =
   else
     let x, s' = g s in
     f x ;
-    perform (produce g s') f (n - 1)
+    perform (Stream (g, s')) f (n - 1)
 
 let rec consume (Stream (f, s)) p d =
   let x, s' = f s in
@@ -48,12 +46,12 @@ let rec consume (Stream (f, s)) p d =
       | None -> ()
       | Some timer ->
         Thread.delay timer ;
-        consume (produce f s') p d
+        consume (Stream (f, s')) p d
 
-let stream_of_list l x = produce (function | [] -> x, [] | h :: t -> h, t) l
+let stream_of_list l x = Stream ((function | [] -> x, [] | h :: t -> h, t), l)
 
 let rec list_of_stream (Stream (f, s)) n =
   if n > 0 then
     let x, s' = f s in
-    x :: (list_of_stream (produce f s') (n - 1))
+    x :: (list_of_stream (Stream (f, s')) (n - 1))
   else []

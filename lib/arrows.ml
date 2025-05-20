@@ -14,13 +14,11 @@ open Stream
 
 type ('a, 'b) sf = SF : ('s -> 'a -> 'b * 's) * 's -> ('a, 'b) sf
 
-let create f s = SF (f, s)
-
-let arr f = create (fun () x -> f x, ()) ()
+let arr f = SF ((fun () x -> f x, ()), ())
 
 let id = SF ((fun s x -> x, s), ())
   
-let const x = arr (Fun.const x)
+let const x = SF ((fun s _ -> x, s), ())
 
 let dup = SF ((fun s x -> (x, x), s), ())
 
@@ -31,9 +29,9 @@ let ( >>> ) (SF (f, sf)) (SF (g, sg)) =
     let y, s1' = f s1 x in
     let z, s2' = g s2 y in
     z, (s1', s2')
-  in create h (sf, sg)
+  in SF (h, (sf, sg))
 
-let first (SF (f, s)) = create (fun s (x, z) -> let y, s' = f s x in (y, z), s') s
+let first (SF (f, s)) = SF ((fun s (x, z) -> let y, s' = f s x in (y, z), s'), s)
 
 let second f = swap >>> first f >>> swap
 
@@ -42,21 +40,21 @@ let parallel (SF (f, sf)) (SF (g, sg))  =
     let x', s1' = f s1 x in
     let y', s2' = g s2 y in 
     (x', y'), (s1', s2')
-  in create h (sf, sg)
+  in SF (h, (sf, sg))
 
 let left (SF (f, s)) =
   let g s = function
     | Either.Left x ->
       let x', s' = f s x in Either.Left x', s' 
     | Either.Right _ as x -> x, s 
-  in create g s
+  in SF (g, s)
 
 let right (SF (f, s)) =
   let g s = function
     | Either.Left _ as x -> x, s
     | Either.Right x ->
       let x', s' = f s x in Either.Right x', s'
-    in create g s
+    in SF (g, s)
 
 let choice (SF (f, sf)) (SF (g, sg)) =
   let h (s1, s2) = function
@@ -64,20 +62,20 @@ let choice (SF (f, sf)) (SF (g, sg)) =
       let x', s1' = f s1 x in Either.Left x', (s1', s2)
     | Either.Right x ->
       let x', s2' = g s2 x in Either.Right x', (s1, s2')
-  in create h (sf, sg)
+  in SF (h, (sf, sg))
 
 (* TODO(nico): reduction of eithers as its own primitive? *)
 let fanin f g = choice f g >>> arr (function | Either.Left x -> x | Either.Right x -> x)
 
 let fanout f g = dup >>> parallel f g
 
-let loop (SF (f, s)) x0 = create (fun (s, c) a -> let (b, c'), s' = f s (a, c) in (b, (s', c'))) (s, x0)
+let loop (SF (f, s)) x0 = SF ((fun (s, c) a -> let (b, c'), s' = f s (a, c) in (b, (s', c'))), (s, x0))
 
 let lift (SF (f, sf)) (Stream (t, st)) =
   let t (s2, s1) =
     let (a, s2') = t s2 in 
     let (b, s1') = f s1 a in 
     (b, (s2', s1'))
-  in produce t (st, sf)
+  in Stream (t, (st, sf))
 
 let delay t = loop swap t
