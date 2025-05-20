@@ -18,6 +18,14 @@ let create f s = SF (f, s)
 
 let arr f = create (fun () x -> f x, ()) ()
 
+let id = SF ((fun s x -> x, s), ())
+  
+let const x = arr (Fun.const x)
+
+let dup = SF ((fun s x -> (x, x), s), ())
+
+let swap = SF ((fun () (x, y) -> (y, x), ()), ())
+
 let ( >>> ) (SF (f, sf)) (SF (g, sg)) =
   let h (s1, s2) x =
     let y, s1' = f s1 x in
@@ -44,12 +52,7 @@ let fanin (SF (f, sf)) (SF (g, sg)) =
       let x', s2' = g s2 x in x', (s1, s2')
     in create h (sf, sg)
 
-let fanout (SF (f, sf)) (SF (g, sg)) =
-  let h (s1, s2) x =
-    let x1, s1' = f s1 x in
-    let x2, s2' = g s2 x in
-    (x1, x2), (s1', s2')
-  in create h (sf, sg)
+let fanout f g = dup >>> parallel f g
 
 let left (SF (f, s)) =
   let g s = function
@@ -81,13 +84,5 @@ let lift (SF (f, sf)) (Stream (t, st)) =
     let (b, s1') = f s1 a in 
     (b, (s2', s1'))
   in produce t (st, sf)
-
-let id = SF ((fun s x -> x, s), ())
-  
-let const x = arr (Fun.const x)
-
-let dup = SF ((fun s x -> (x, x), s), ())
-
-let swap = SF ((fun () (x, y) -> (y, x), ()), ())
 
 let delay t = loop swap t
