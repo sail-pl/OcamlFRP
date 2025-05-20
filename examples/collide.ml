@@ -51,7 +51,7 @@ let world : ball * ball -> (input, output) sf =
   let merge_outputs = arr (fun (x,y) -> x@y) in
   let update2 = parallel update update in 
   let renderer2 = parallel render_ball render_ball  in 
-  loop (split_input  >>> update2 >>> collide >>> Arr.dup >>> first (renderer2 >>> merge_outputs))
+  loop (split_input  >>> update2 >>> collide >>> dup >>> first (renderer2 >>> merge_outputs))
     
 let _ = 
   let b1 = {x=100.; y=100.; vx=2.0; vy=2.0; radius=10.; color=black} in

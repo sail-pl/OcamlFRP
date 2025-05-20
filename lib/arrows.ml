@@ -82,13 +82,10 @@ let lift (SF (f, sf)) (Stream (t, st)) =
     (b, (s2', s1'))
   in produce t (st, sf)
 
-module Arr =
-  struct 
-    let id = SF ((fun s x -> x, s), ())
+let id = SF ((fun s x -> x, s), ())
   
-    let const x = arr (Fun.const x)
+let const x = arr (Fun.const x)
 
-    let dup = SF ((fun s x -> (x, x), s), ())
+let dup = SF ((fun s x -> (x, x), s), ())
 
-    let delay t = loop (arr Utils.swap) t
-  end
+let delay t = loop (arr Utils.swap) t

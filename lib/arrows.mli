@@ -74,21 +74,16 @@ val loop : ('a * 'x, 'b * 'x) sf -> 'x -> ('a, 'b) sf
     [f] to stream [s]. *)
 val lift : ('a,'b) sf -> 'a stream -> 'b stream
 
-(* TODO(nico): delete this nested module, or wrap everything in
-   a module Arrows to have the SF type be named [t] to follow
-   popular naming convention [Module.t] ??? *)
+(** [id] is the synchronous function which returns its arguments. *)
+val id : ('a, 'a) sf
 
-module Arr : sig
-    (** [id] is the synchronous function which returns its arguments. *)
-    val id : ('a, 'a) sf
+(** [const x] is the synchronous function which always returns [x]. *)
+val const : 'b -> ('a, 'b) sf
 
-    (** [const x] is the synchronous function which always returns [x]. *)
-    val const : 'b -> ('a, 'b) sf
+(** [dup] is the synchronous function which returns a pair
+    of its arguments. *)
+val dup : ('a, 'a * 'a) sf
 
-    (** [dup] is the synchronous function which returns a pair
-        of its arguments. *)
-    val dup : ('a, 'a * 'a) sf
-
-    (** [delay t] *)
-    val delay : 'a -> ('a, 'a) sf
-end
+(** [delay t] is the synchronous function which retards a streamed value by
+    one step, starting with [t]. *)
+val delay : 'a -> ('a, 'a) sf

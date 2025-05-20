@@ -9,7 +9,6 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
 (*************************************************************************)
 
-open Utils
 open Arrows
 open FrpEngine
 
@@ -26,5 +25,5 @@ module Std : Environment with type appinput = string and type appoutput = string
 module E = Engine(Std)
 
 let _ = 
-  let f (x,y) = dup (y ^ x) in
+  let f (x, y) = Utils.dup (y ^ x) in
     E.run (loop (arr f) "") (Some 0.001)

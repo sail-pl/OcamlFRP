@@ -213,10 +213,10 @@ let game =
         (generate_apple               (* generate a new apple *)
           >>> increment_score)          (* and increase the score *)
         remove_snake_tail             (* otherwise remove the snake tail *)
-      >>> fanin Arr.id Arr.id       (* consume the either to get the state *)
+      >>> fanin id id               (* consume the either to get the state *)
       >>> fanout                    (* and then: *)
         make_scene                    (* create the scene to be renderred *)
-        Arr.id)                       (* and pass the state back to loop *)
+        id)                           (* and pass the state back to loop *)
     initial_state
   (* TODO(nico): manage if the board is full of the snake, since for now we will
      be stuck in an infinite loop (as the new apple position won't be solved),
