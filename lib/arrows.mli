@@ -18,6 +18,10 @@ open Stream
 type ('a, 'b) sf =
   | SF : ('s -> 'a -> 'b * 's) * 's -> ('a, 'b) sf
 
+(** [create f s] is the synchronous function composed of function [f] and
+    initial state [s] *)
+val create : ('s -> 'a -> 'b * 's) -> 's -> ('a, 'b) sf
+
 (** [arr f] is the synchronous function constructed from function [f]. *)
 val arr : ('a -> 'b) -> ('a,'b) sf
 
@@ -38,6 +42,11 @@ val second : ('a, 'b) sf -> ('c * 'a, 'c * 'b) sf
     on the second. *)
 val parallel : ('a, 'b) sf -> ('c, 'd) sf -> ('a * 'c, 'b * 'd) sf 
 
+(** [fanin f g] is the synchronous function which consumes an [Either.t]
+    and applies on the value synchronous function [f] if it was an
+    [Either.Left] or synchronous function [g] if it was an [Either.Right]. *)
+val fanin : ('a, 'b) sf -> ('c, 'b) sf -> (('a, 'c) Either.t, 'b) sf
+
 (** [fanout f g] is the synchronous function which applies synchronous
     functions [f] and [g] on a single entry, returning a pair of both
     results [(f x, g x)] *)
@@ -56,11 +65,6 @@ val right : ('a, 'b) sf -> (('c, 'a) Either.t, ('c, 'b) Either.t) sf
     [Either.Right] [e]. *)
 val choice : ('a, 'b) sf -> ('c, 'd) sf -> 
              (('a, 'c) Either.t, ('b, 'd) Either.t) sf
-
-(** [fanin f g] is the synchronous function which consumes an [Either.t]
-    and applies on the value synchronous function [f] if it was an
-    [Either.Left] or synchronous function [g] if it was an [Either.Right]. *)
-val fanin : ('a, 'b) sf -> ('c, 'b) sf -> (('a, 'c) Either.t, 'b) sf
 
 (** [loop f x0] is the synchronous function which calls itself with the
     previous state, starting with state [x0]. *)
