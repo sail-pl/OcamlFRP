@@ -44,16 +44,6 @@ let parallel (SF (f, sf)) (SF (g, sg))  =
     (x', y'), (s1', s2')
   in create h (sf, sg)
 
-let fanin (SF (f, sf)) (SF (g, sg)) =
-  let h (s1, s2) = function
-    | Either.Left x ->
-      let x', s1' = f s1 x in x', (s1', s2)
-    | Either.Right x ->
-      let x', s2' = g s2 x in x', (s1, s2')
-    in create h (sf, sg)
-
-let fanout f g = dup >>> parallel f g
-
 let left (SF (f, s)) =
   let g s = function
     | Either.Left x ->
@@ -75,6 +65,11 @@ let choice (SF (f, sf)) (SF (g, sg)) =
     | Either.Right x ->
       let x', s2' = g s2 x in Either.Right x', (s1, s2')
   in create h (sf, sg)
+
+(* TODO(nico): reduction of eithers as its own primitive? *)
+let fanin f g = choice f g >>> arr (function | Either.Left x -> x | Either.Right x -> x)
+
+let fanout f g = dup >>> parallel f g
 
 let loop (SF (f, s)) x0 = create (fun (s, c) a -> let (b, c'), s' = f s (a, c) in (b, (s', c'))) (s, x0)
 
