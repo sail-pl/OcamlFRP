@@ -43,8 +43,7 @@ let coiterate f x0 = produce (fun x -> x, f x) x0
 let constant x = coiterate (Fun.const x) x
   
 let rec perform (Stream (g, s)) f n =
-  if n <= 0 then
-    ()
+  if n <= 0 then ()
   else
     let x, s' = g s in
     f x ;
@@ -56,18 +55,15 @@ let rec consume (Stream (f, s)) p d =
   | None -> ()
   | Some timer ->
     Thread.delay timer ;
-    if p x then (* TODO(nico): can p have side-effects? *)
-      consume (Stream (f, s')) p d
-    else
-      ()
+    if p x then consume (Stream (f, s')) p d
+    else ()
 
 let stream_of_list l x =
-  let f =
-    function
-    | [] as l -> x, l
-    | h :: t -> h, t
-  in
-  Stream (f, l)
+  Stream (
+    (function
+      | [] as l -> x, l
+      | h :: t -> h, t),
+    l)
 
 let rec list_of_stream (Stream (f, s)) n =
   if n > 0 then
