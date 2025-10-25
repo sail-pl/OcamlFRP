@@ -11,7 +11,7 @@
 
 open Graphics
 
-open Arrows
+open Stream
 open FrpEngine
 
 type renderObject = {draw : unit -> unit }

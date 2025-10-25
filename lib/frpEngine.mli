@@ -9,7 +9,7 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
 (*************************************************************************)
 
-open Arrows
+open Stream
 
 module type Environment = 
   sig 

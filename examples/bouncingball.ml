@@ -10,6 +10,7 @@
 (*************************************************************************)
 
 open Graphics
+open Ocamlfrp.Stream
 open Ocamlfrp.Arrows
 open Ocamlfrp.Frpgraphics
 

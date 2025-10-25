@@ -11,8 +11,6 @@
 
 open Stream   
 
-type ('a, 'b) sf = 
-  SF : ('s -> 'a -> 'b * 's) * 's -> ('a, 'b) sf
 
 let arr : ('a -> 'b) -> ('a, 'b) sf = 
   fun f ->
@@ -124,14 +122,14 @@ let loop : ('a * 'c, 'b * 'c) sf -> 'c -> ('a, 'b) sf =
           (b, (state', c'))
     in SF (t, (s, c))
 
-let lift : ('a, 'b) sf -> 'a stream -> 'b stream =
+(* let lift : ('a, 'b) sf -> 'a stream -> 'b stream =
   fun (SF (t1, s1)) -> 
     fun (Str (t2, s2)) -> 
       let t = fun (state2, state1) -> 
         let (a, state2') = t2 state2 in 
           let (b, state1') = t1 state1 a in 
             (b, (state2', state1'))
-      in Str (t, (s2, s1))
+      in Str (t, (s2, s1)) *)
 
 module Arr = struct 
 

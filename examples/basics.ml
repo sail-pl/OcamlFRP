@@ -18,11 +18,11 @@ open Ocamlfrp.Arrows
 
 (** stream of () *)
 
-let dummy : unit stream = constant ()
-
+let dummy : unit stream = stream (fun () -> ((),())) () 
 (** stream of positive integers *)
 
-let positives : int stream = coiterate ((+) 1) 0
+let positives : int stream = stream (fun n -> (n, n+1)) 0
+  (* coiterate ((+) 1) 0 *)
 
 (* STREAM FUNCTIONS WITHOUT LOOPS *)
 

@@ -10,7 +10,6 @@
 (*************************************************************************)
 
 open Stream
-open Arrows
 
 module type Environment = 
   sig 

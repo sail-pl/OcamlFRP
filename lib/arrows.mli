@@ -17,7 +17,7 @@ open Stream
     and produces values of type [b] *)  
 
 (** Synchronous function type *)
-type ('a,'b) sf = SF : ('s -> 'a -> 'b * 's) * 's -> ('a, 'b) sf
+(* type ('a,'b) sf = SF : ('s -> 'a -> 'b * 's) * 's -> ('a, 'b) sf *)
 
 (** Lift a function to a synchronous function *)
 val arr : ('a -> 'b) -> ('a,'b) sf
@@ -53,7 +53,7 @@ val fanin : ('a, 'c) sf -> ('b, 'c) sf -> (('a, 'b) Either.t, 'c) sf
 val loop : ('a * 'x, 'b * 'x) sf -> 'x -> ('a, 'b) sf
 
 (** Iterate for synchronous functions *)
-val lift : ('a,'b) sf -> 'a stream -> 'b stream
+(* val lift : ('a,'b) sf -> 'a stream -> 'b stream *)
 
 module Arr : sig
     val id : ('a, 'a) sf

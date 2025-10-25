@@ -1,4 +1,3 @@
-
 (*************************************************************************)
 (*                                                                       *)
 (*                                OCamlFRP                               *)
@@ -10,8 +9,72 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.*)
 (*************************************************************************)
 
+(* Streams are concrete streams in the sense of Caspi et Pouzet *)
+(* We use GADT to encapsulate the internal state as an existential type *)
+open Utils
+
 type 'a stream = 
   | Str : ('state -> ('a * 'state)) * 'state -> 'a stream
+
+let stream (f : 'c -> 'a *'c) (x : 'c) : 'a stream = Str (f, x)
+
+let map : ('a -> 'b) -> 'a stream -> 'b stream = 
+  fun f (Str (step, s )) -> Str ((fun s -> first f (step s)), s)
+
+let coiterate : ('c -> 'a -> 'b * 'c) -> 'c -> 'a stream -> 'b stream =
+  fun f x s ->
+  let Str (g, sts) = s in 
+    Str ((fun (st1, st2) -> 
+            let (a, st1') = g st1 in 
+            let (b, st2') = f st2 a in 
+                (b, (st1',st2'))
+            ),
+    (sts, x))
+
+
+let apply : 'a 'b. ('a -> 'b) stream -> 'a stream -> 'b stream =
+  fun (Str (f, i)) (Str (e, ie)) ->
+    Str ((fun (sf,se) -> 
+      let (vf,sf') = f sf in
+      let (ve,se') = e se in
+        ((vf ve), (sf', se'))),
+        (i,ie))
+
+(* cas général de l'itérateur *)
+
+(* let coiterate (x : 'c) (f : 'c -> 'a -> 'b * 'c) *)
+
+(** Synchronous stream functions *)
+
+type ('a, 'b) sf = 
+  SF : ('state -> 'a -> 'b * 'state) * 'state -> ('a, 'b) sf
+
+(** homomorphism *)
+
+let lift (sf : ('a, 'b) sf) (s : 'a stream) : 'b stream =  
+  let Str (g, sts) = s in 
+  let SF (f, stf) = sf in
+      Str ( 
+            (fun (st1, st2) -> 
+              let (a, st1') = g st1 in 
+              let (b, st2') = f st2 a in 
+                (b, (st1',st2'))
+            ), 
+            (sts,stf))
+
+(* Category *)
+
+let id : ('a, 'a) sf = 
+  SF ((fun () a -> (a, ())), ())
+
+let compose (SF (t1, s1) : ('a, 'b) sf) (SF (t2, s2) : ('b, 'c) sf) : ('a, 'c) sf =
+      SF ((fun (s1, s2) a -> 
+            let (b, s1') = t1 s1 a in 
+              let (c, s2') = t2 s2 b in 
+                (c, (s1', s2'))),
+              (s1,s2))
+
+(* HUM *)
 
 let destr : 'a stream -> 'a * 'a stream = 
     fun (Str (f,s)) ->
@@ -22,28 +85,15 @@ let head : 'a stream -> 'a =
 
 let tail : 'a stream -> 'a stream =
   fun s -> snd (destr s)
-  
-let map : 'a 'b. ('a -> 'b) -> 'a stream -> 'b stream = 
-  fun f (Str (h,s)) -> 
-    Str ((fun s -> let (a,s') = h s in (f a, s')), s)
-
-let apply : 'a 'b. ('a -> 'b) stream -> 'a stream -> 'b stream =
-  fun (Str (f, i)) (Str (e, ie)) ->
-    Str ((fun (sf,se) -> 
-      let (vf,sf') = f sf in
-      let (ve,se') = e se in
-        ((vf ve), (sf', se'))),
-        (i,ie))
-  
+    
 
 let produce : 'a 's. ('s -> 'a * 's) -> 's -> 'a stream = 
   fun h s -> Str (h,s) 
 
-let coiterate : 'a. ('a -> 'a) -> 'a -> 'a stream = 
-  fun f x0 -> produce (fun x -> let y = f x in (x,y)) x0
+(* let coiterate : 'a. ('a -> 'a) -> 'a -> 'a stream = 
+  fun f x0 -> produce (fun x -> let y = f x in (x,y)) x0 *)
 
-let constant : 'a. 'a -> 'a stream =
-  fun x -> coiterate (Fun.const x) x
+
   
 let rec perform : 'a stream -> ('a -> unit) -> int -> unit = 
   fun s f n ->
